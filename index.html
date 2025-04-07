@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.10.2/p5.js"></script>
+    <script src="https://unpkg.com/p5.js-svg@1.3.1"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.10.2/addons/p5.sound.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <meta charset="utf-8" />
+    <title>Various shape Perforation Tool</title>
+  </head>
+  <body>
+    <h1>Various shape Perforation Tool</h1>
+    
+    <!-- Image Upload -->
+    <label for="imageUpload">Upload Image:</label>
+    <input type="file" id="imageUpload" accept="image/*" />
+    <br /><br />
+
+    <!-- Drag & Drop Image Area -->
+    <div
+      id="dropArea"
+      style="border: 2px dashed #ccc; padding: 20px; text-align: center;"
+    >
+      <p>Drag and Drop an image here</p>
+    </div>
+
+    <br />
+
+
+    <!-- Slider UI -->
+    <label for="colorRangeB">Color Range Black:</label>
+    <input
+      type="range"
+      id="colorRangeB"
+      min="0"
+      max="255"
+      value="0"
+      oninput="updateColorRange('colorRangeB')"
+    />
+    <input
+      type="number"
+      id="colorRangeBInput"
+      min="0"
+      max="255"
+      value="0"
+      oninput="updateColorRange('colorRangeB', true)"
+    />
+    <br />
+
+    <label for="colorRangeW">Color Range White:</label>
+    <input
+      type="range"
+      id="colorRangeW"
+      min="0"
+      max="255"
+      value="90"
+      oninput="updateColorRange('colorRangeW')"
+    />
+    <input
+      type="number"
+      id="colorRangeWInput"
+      min="0"
+      max="255"
+      value="90"
+      oninput="updateColorRange('colorRangeW', true)"
+    />
+    <br />
+
+
+    <label for="dis">Dot Distance:</label>
+    <input type="number" id="dis" min="1" max="10" step="0.01" value="2.69" />
+    <span id="disValue">2.69 mm </span>
+    <br />
+ <br />
+
+    <label for="brightnessInfluence">Brightness Influence:</label>
+    <input
+      type="range"
+      id="brightnessInfluence"
+      min="0"
+      max="5"
+      step="0.1"
+      value="1"
+    />
+    <span id="brightnessInfluenceValue">1</span>
+    <br />
+
+    <label for="noiseScale">Noise Scale:</label>
+    <input
+      type="range"
+      id="noiseScale"
+      min="0.00"
+      max="0.1"
+      step="0.001"
+      value="0.01"
+    />
+    <span id="noiseScaleValue">0.01</span>
+    <br />
+
+    <label for="generalRotation">General Rotation:</label>
+    <input
+      type="range"
+      id="generalRotation"
+      min="0"
+      max="360"
+      step="1"
+      value="50"
+    />
+    <span id="generalRotationValue">50</span>
+    <br />
+
+    <label for="randomValue">Random Position:</label>
+    <input
+      type="number"
+      id="randomValue"
+      min="0"
+      max="1"
+      step="0.01"
+      value="0"
+    />
+    <span id="randomValueValue">0.1</span>
+    
+    <br />
+    
+    
+    <h1>Press "S" to save SVG</h1>
+
+    <script src="NEW.js"></script>
+
+    <script>
+       // When sliders change, update values in the span and trigger update in p5.js
+       document.getElementById("colorRangeB").addEventListener("input", function () {
+           document.getElementById("colorRangeBValue").innerText = this.value;
+           updatePerforation();
+       });
+
+       document.getElementById("colorRangeW").addEventListener("input", function () {
+           document.getElementById("colorRangeWValue").innerText = this.value;
+           updatePerforation();
+       });
+
+       document.getElementById("dis").addEventListener("input", function () {
+           document.getElementById("disValue").innerText = this.value;
+           updatePerforation();
+       });
+
+       document.getElementById("brightnessInfluence").addEventListener("input", function () {
+           document.getElementById("brightnessInfluenceValue").innerText = this.value;
+           updatePerforation();
+       });
+
+      document.getElementById("noiseScale").addEventListener("input", function () {
+           document.getElementById("noiseScaleValue").innerText = this.value;
+           updatePerforation();
+       });
+
+      document.getElementById("generalRotation").addEventListener("input", function () {
+           document.getElementById("generalRotationValue").innerText = this.value;
+           updatePerforation();
+       });
+      
+      document.getElementById("randomValue").addEventListener("input", function () {
+           document.getElementById("randomValueValue").innerText = this.value;
+           updatePerforation();
+       });
+      
+      // Image Upload Functionality
+        document.getElementById("imageUpload").addEventListener("change", function(event) {
+            let file = event.target.files[0];
+            if (file) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    loadNewImage(e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Drag & Drop Functionality
+        let dropArea = document.getElementById("dropArea");
+
+        dropArea.addEventListener("dragover", function(event) {
+            event.preventDefault();
+            dropArea.style.backgroundColor = "#f0f0f0";
+        });
+
+        dropArea.addEventListener("dragleave", function(event) {
+            dropArea.style.backgroundColor = "#ffffff";
+        });
+
+        dropArea.addEventListener("drop", function(event) {
+            event.preventDefault();
+            dropArea.style.backgroundColor = "#ffffff";
+
+            let file = event.dataTransfer.files[0];
+            if (file) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    loadNewImage(e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+      
+       function updateColorRange(id, fromInput = false) {
+          let slider = document.getElementById(id);
+          let input = document.getElementById(id + "Input");
+
+          if (fromInput) {
+              let value = Math.min(255, Math.max(0, parseInt(input.value) || 0));
+              slider.value = value;
+          } else {
+              input.value = slider.value;
+          }
+
+          window[id] = parseInt(slider.value); // Update the corresponding global variable
+          updatePerforation();
+      }
+    </script>
+  </body>
+</html>
