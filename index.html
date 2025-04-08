@@ -9,25 +9,86 @@
     <title>Various shape Perforation Tool</title>
   </head>
   <body>
-    <h1>Various shape Perforation Tool</h1>
+    <div class="main-container">
+      <h1>Various shape Perforation Tool</h1>
+
+       <!-- Image Upload -->
+       <label for="imageUpload">Upload Image:</label>
+       <input type="file" id="imageUpload" accept="image/*" />
+       <br /><br />
+ 
+       <!-- Drag & Drop Image Area -->
+       <div id="dropArea">
+         <p>Drag and Drop a PNG or JPG image here</p>
+         <br />
+         <p>Make sure your images are in 72 DPI</p>
+         
+       </div>
+       <p id="canvasSize">Current Image Size: —</p>
+
+       
+ 
+       <br />
+ 
+
+      <div class="content-layout" id="contentLayout">
+        <!-- This div is where p5.js will insert the canvas -->
+        <div id="sketch-holder"></div>
+
+      
+        <div class="controls">
+          
+          <!-- Slider UI -->
+         <label for="size1">Dot radius1:</label>
+         <img 
+         id="shapeIcon-size1"
+         src="Icons/rectangle-05.png" 
+         alt="Toggle Shape" 
+         onclick="toggleShapeForSize('size1')" 
+         class="shape-icon active" 
+       />
     
-    <!-- Image Upload -->
-    <label for="imageUpload">Upload Image:</label>
-    <input type="file" id="imageUpload" accept="image/*" />
-    <br /><br />
+         <input type="number" id="size1" min="0" max="5" step="0.01" value="0.8" />
+         <span id="size1Value">mm</span>
+         <br />
 
-    <!-- Drag & Drop Image Area -->
-    <div
-      id="dropArea"
-      style="border: 2px dashed #ccc; padding: 20px; text-align: center;"
-    >
-      <p>Drag and Drop an image here</p>
-    </div>
-
+    <label for="size2">Dot radius2:</label>
+    <img 
+         id="shapeIcon-size2"
+         src="Icons/rectangle-05.png" 
+         alt="Toggle Shape" 
+         onclick="toggleShapeForSize('size2')" 
+         class="shape-icon active" 
+       />
+    <input type="number" id="size2" min="0" max="5" step="0.01" value="0.5" />
+    <span id="size2Value">mm</span>
     <br />
 
+    <label for="size3">Dot radius3:</label>
+    <img 
+         id="shapeIcon-size3"
+         src="Icons/rectangle-05.png" 
+         alt="Toggle Shape" 
+         onclick="toggleShapeForSize('size3')" 
+         class="shape-icon active" 
+       />
+    <input type="number" id="size3" min="0" max="5" step="0.01" value="0.3" />
+    <span id="size3Value">mm</span>
+    <br />
 
-    <!-- Slider UI -->
+    <label for="size4">Dot radius4:</label>
+    <img 
+         id="shapeIcon-size4"
+         src="Icons/rectangle-05.png" 
+         alt="Toggle Shape" 
+         onclick="toggleShapeForSize('size4')" 
+         class="shape-icon active" 
+       />
+    <input type="number" id="size4" min="0" max="5" step="0.01" value="0.1" />
+    <span id="size4Value">mm</span>
+    <br />
+    <br />
+
     <label for="colorRangeB">Color Range Black:</label>
     <input
       type="range"
@@ -69,10 +130,10 @@
 
     <label for="dis">Dot Distance:</label>
     <input type="number" id="dis" min="1" max="10" step="0.01" value="2.69" />
-    <span id="disValue">2.69 mm </span>
+    <span id="disValue">2.69 mm(MK10 distance = 2.69mm) </span>
     <br />
  <br />
-
+<p id="canvasSize">________________ Rotation _________________</p>
     <label for="brightnessInfluence">Brightness Influence:</label>
     <input
       type="range"
@@ -109,7 +170,7 @@
     <span id="generalRotationValue">50</span>
     <br />
 
-    <label for="randomValue">Random Position:</label>
+    <label for="randomValue">Randomnise each Position:</label>
     <input
       type="number"
       id="randomValue"
@@ -118,16 +179,61 @@
       step="0.01"
       value="0"
     />
-    <span id="randomValueValue">0.1</span>
+    <span id="randomValueValue">0</span>
     
     <br />
+
+    <div class="settings-buttons">
+      <button class="btn" onclick="saveSVG()">🖨️ Save SVG</button>
+      <button class="btn" onclick="saveSettings()">💾 Save Settings</button>
     
+      <button class="btn" onclick="document.getElementById('loadSettingsFile').click()">
+        📂 Load Settings
+      </button>
+
+      
     
-    <h1>Press "S" to save SVG</h1>
+      <input type="file" id="loadSettingsFile" onchange="handleFileLoad(event)" style="display: none;" />
+    </div>
+    
+  </div>
+</div>
+</div>
+
+     
+
+    
 
     <script src="NEW.js"></script>
 
+
+    
+
     <script>
+       // When sliders change, update values in the span and trigger update in p5.js
+
+       document.getElementById("size1").addEventListener("input", function () {
+
+updatePerforation();
+});
+
+document.getElementById("size2").addEventListener("input", function () {
+
+updatePerforation();
+});
+
+document.getElementById("size3").addEventListener("input", function () {
+
+updatePerforation();
+});
+
+document.getElementById("size4").addEventListener("input", function () {
+
+updatePerforation();
+});
+
+
+
        // When sliders change, update values in the span and trigger update in p5.js
        document.getElementById("colorRangeB").addEventListener("input", function () {
            document.getElementById("colorRangeBValue").innerText = this.value;

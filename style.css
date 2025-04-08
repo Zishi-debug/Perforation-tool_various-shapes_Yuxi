@@ -1,7 +1,154 @@
-html, body {
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f8f9fa;
   margin: 0;
-  padding: 0;
+  padding: 40px;
+  display: flex;
+  justify-content: center;
 }
-canvas {
+
+.main-container {
+  background-color: #ffffff;
+  
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  
+  box-sizing: border-box;
+}
+
+.shape-icon {
+  width: 40px;
+  height: auto;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.shape-icon:hover {
+  filter: brightness(1.2) drop-shadow(0 0 4px #999);
+  transform: scale(1.1) rotate(5deg);
+}
+
+#canvasSize {
+  font-weight: bold;
+  font-size: 14px;
+  color: #444;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+h1 {
+  text-align: center;
+  color: #333;
+}
+
+label {
+  font-weight: bold;
+}
+
+input[type="number"],
+input[type="range"],
+input[type="file"] {
+  margin: 5px 0 15px 0;
+  width: 100%;
+  max-width: 300px;
+  padding: 5px;
+}
+
+#dropArea {
+  border: 2px dashed #ccc;
+  border-radius: 10px;
+  padding: 30px;
+  text-align: center;
+  transition: background-color 0.3s, border-color 0.3s;
+  background-color: #fff;
+}
+
+#dropArea:hover {
+  background-color: #e6f0ff;
+  border-color: #007acc;
+}
+
+#dropArea p {
+  margin: 0;
+  font-size: 16px;
+  color: #555;
+}
+
+.content-layout {
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* The canvas container */
+#sketch-holder {
+  flex-shrink: 0;
+}
+
+/* Style the canvas itself */
+#sketch-holder canvas {
   display: block;
+  height: auto;
+  max-width: 100%;
+  border-radius: 10px;
+}
+
+/* Controls sidebar */
+.controls {
+  flex: 1;
+  min-width: 300px;
+  max-width: 400px;
+}
+
+.controls label {
+  display: block;
+  margin-top: 10px;
+}
+
+.controls input,
+.controls span {
+  display: inline-block;
+  margin-bottom: 10px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.settings-buttons {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.btn {
+  
+  color: rgb(0, 0, 0);
+  padding: 10px 16px;
+  font-size: 14px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.btn:hover {
+  
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+/* Optional: spacing around the file input label */
+#loadSettingsFile {
+  display: none;
 }
