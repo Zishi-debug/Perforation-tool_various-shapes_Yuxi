@@ -1,17 +1,10 @@
 /* Various pattern Perforation tools
 
 This is a handy tool designed for changing any patterns/images into perforatable files, which can be used in production. 
-There are three different sizes of perforation holes set in this sketch, and the sizes are controlled by the brightness of the loaded image.
-
-Make sure you have done before you start:
-1. Sign up in P5.js with your Google or GitHub account.
-2. Save a copy of this sketch in your account by pressing "Ctrl+S" or going to "File → Duplicate".
-3. Click the Start button at the top left to run the script.
-
-Upload your own images on the left bar by clicking the "+" button.
-Press "S" on the canvas to save an SVG file.
+There are four different sizes of perforation holes set in this sketch, and the Dot sizes are controlled by the brightness of the loaded image.
 
 Any questions, please contact Yuxi Chen: yuxi.chen@rolls-roycemotorcars.com
+
 */
 
 //___________________________________ Parameters you can play with __________________________________________
