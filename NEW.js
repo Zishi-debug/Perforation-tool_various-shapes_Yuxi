@@ -12,8 +12,12 @@ Any questions, please contact Yuxi Chen: yuxi.chen@rolls-roycemotorcars.com
 let PixelToMilimeterRatio = 2.835; // Please check pixel-to-millimeter ratio in your Illustrator file
 let img;
 
-let dis = 2.69; // If you want a specific distance between each dot, replace the value
-//let res = dis * PixelToMilimeterRatio; // MK10 density, do not change
+let dis1 = 2.69; // Distance for size1
+let dis2 = 2.69; // Distance for size2
+let dis3 = 2.69; // Distance for size3
+let dis4 = 2.69; // Distance for size4
+
+
 let brightnessInfluence = 1; // Adjust this value to control how much brightness affects rotation
 
 
@@ -78,7 +82,12 @@ function setup() {
 //___________________________________ Main Perforation Logic __________________________________________
 
 function setupPerforation() {
-  let res = dis * PixelToMilimeterRatio; // MK10 density, do not change
+  let res1 = dis1 * PixelToMilimeterRatio;
+  let res2 = dis2 * PixelToMilimeterRatio;
+  let res3 = dis3 * PixelToMilimeterRatio;
+  let res4 = dis4 * PixelToMilimeterRatio;
+  
+
   Dots = { size1: [], size2: [], size3: [], size4: [] }; // Clear previous Dots
 
   size1 = size1 * PixelToMilimeterRatio; // Blue dots, change the dot radius
@@ -90,25 +99,25 @@ function setupPerforation() {
   let sin45 = Math.sin(PI / 4);
   let centerX = width / 2;
   let centerY = height / 2;
-  let step = res;
 
-  for (let y = -2 * height; y < height * 2; y += step) {
-    for (let x = -2 * width; x < width * 2; x += step) {
+  //draw Dot 1
+  for (let y = -3 * height; y < height * 3; y += res1) {
+    for (let x = -3 * width; x < width * 3; x += res1) {
       let newX = centerX + (x * cos45 - y * sin45);
       let newY = centerY + (x * sin45 + y * cos45);
       if (
-        newX >= -res &&
-        newX <= width + res &&
-        newY >= -res &&
-        newY <= height + res
+        newX >= -res1 &&
+        newX <= width + res1 &&
+        newY >= -res1 &&
+        newY <= height + res1
       ) {
         let br = brightness(
           img.get(constrain(newX, 0, width - 1), constrain(newY, 0, height - 1))
         );
 
         let r = int(map(br, colorRangeB, colorRangeW, 1, 4));
-        let offsetX = random(-res * randomValue, res * randomValue);
-        let offsetY = random(-res * randomValue, res * randomValue);
+        let offsetX = random(-res1 * randomValue, res1 * randomValue);
+        let offsetY = random(-res1 * randomValue, res1 * randomValue);
         let size, color;
 
         let noiseRotation = int(noise(x * noiseScale, y * noiseScale) * 360 * noiseScale * 10);
@@ -128,9 +137,41 @@ function setupPerforation() {
             color,
             angle,
           });
-        } else if (r === 2) {
+        } 
+      }
+    }
+  }
+
+  //draw Dot 2
+  for (let y = -3 * height; y < height * 3; y += res2) {
+    for (let x = -3 * width; x < width * 3; x += res2) {
+      let newX = centerX + (x * cos45 - y * sin45);
+      let newY = centerY + (x * sin45 + y * cos45);
+      if (
+        newX >= -res2 &&
+        newX <= width + res2 &&
+        newY >= -res2 &&
+        newY <= height + res2
+      ) {
+        let br = brightness(
+          img.get(constrain(newX, 0, width - 1), constrain(newY, 0, height - 1))
+        );
+
+        let r = int(map(br, colorRangeB, colorRangeW, 1, 4));
+        let offsetX = random(-res2 * randomValue, res2 * randomValue);
+        let offsetY = random(-res2 * randomValue, res2 * randomValue);
+        let size, color;
+
+        let noiseRotation = int(noise(x * noiseScale, y * noiseScale) * 360 * noiseScale * 10);
+        let brightnessRotation =
+          map(br, colorRangeB, colorRangeW, -90, 90) * brightnessInfluence;
+        let generalRotationD = parseFloat(generalRotation);
+        let angle = noiseRotation + brightnessRotation + generalRotationD;
+        //console.log("angle:", noiseRotation);
+
+        if (r === 2) {
           size = size2;
-          color = [0, 255, 0];
+          color = [0, 255,0];
           Dots.size2.push({
             x: newX + offsetX,
             y: newY + offsetY,
@@ -138,9 +179,41 @@ function setupPerforation() {
             color,
             angle,
           });
-        } else if (r === 3) {
+        } 
+      }
+    }
+  }
+
+  //draw Dot 3
+  for (let y = -3 * height; y < height * 3; y += res3) {
+    for (let x = -3 * width; x < width * 3; x += res3) {
+      let newX = centerX + (x * cos45 - y * sin45);
+      let newY = centerY + (x * sin45 + y * cos45);
+      if (
+        newX >= -res3 &&
+        newX <= width + res3 &&
+        newY >= -res3 &&
+        newY <= height + res3
+      ) {
+        let br = brightness(
+          img.get(constrain(newX, 0, width - 1), constrain(newY, 0, height - 1))
+        );
+
+        let r = int(map(br, colorRangeB, colorRangeW, 1, 4));
+        let offsetX = random(-res3 * randomValue, res3 * randomValue);
+        let offsetY = random(-res3 * randomValue, res3 * randomValue);
+        let size, color;
+
+        let noiseRotation = int(noise(x * noiseScale, y * noiseScale) * 360 * noiseScale * 10);
+        let brightnessRotation =
+          map(br, colorRangeB, colorRangeW, -90, 90) * brightnessInfluence;
+        let generalRotationD = parseFloat(generalRotation);
+        let angle = noiseRotation + brightnessRotation + generalRotationD;
+        //console.log("angle:", noiseRotation);
+
+        if (r === 3) {
           size = size3;
-          color = [255, 0, 0];
+          color = [255,0,0];
           Dots.size3.push({
             x: newX + offsetX,
             y: newY + offsetY,
@@ -148,9 +221,41 @@ function setupPerforation() {
             color,
             angle,
           });
-        } else if (r === 4) {
+        } 
+      }
+    }
+  }
+
+  //draw Dot 4
+   for (let y = -3 * height; y < height * 3; y +=res4) {
+    for (let x = -3 * width; x < width * 3; x +=res4) {
+      let newX = centerX + (x * cos45 - y * sin45);
+      let newY = centerY + (x * sin45 + y * cos45);
+      if (
+        newX >= -res3 &&
+        newX <= width +res4 &&
+        newY >= -res3 &&
+        newY <= height +res4
+      ) {
+        let br = brightness(
+          img.get(constrain(newX, 0, width - 1), constrain(newY, 0, height - 1))
+        );
+
+        let r = int(map(br, colorRangeB, colorRangeW, 1, 4));
+        let offsetX = random(-res3 * randomValue,res4 * randomValue);
+        let offsetY = random(-res3 * randomValue,res4 * randomValue);
+        let size, color;
+
+        let noiseRotation = int(noise(x * noiseScale, y * noiseScale) * 360 * noiseScale * 10);
+        let brightnessRotation =
+          map(br, colorRangeB, colorRangeW, -90, 90) * brightnessInfluence;
+        let generalRotationD = parseFloat(generalRotation);
+        let angle = noiseRotation + brightnessRotation + generalRotationD;
+        //console.log("angle:", noiseRotation);
+
+        if (r === 4) {
           size = size4;
-          color = [155, 155, 0];
+          color = [150,0];
           Dots.size4.push({
             x: newX + offsetX,
             y: newY + offsetY,
@@ -158,7 +263,7 @@ function setupPerforation() {
             color,
             angle,
           });
-        }
+        } 
       }
     }
   }
@@ -174,15 +279,17 @@ function updatePerforation() {
   size4 = document.getElementById("size4").value;
   colorRangeB = document.getElementById("colorRangeB").value;
   colorRangeW = document.getElementById("colorRangeW").value;
-  dis = document.getElementById("dis").value;
+
+  dis1 = document.getElementById("dis1").value;
+  dis2 = document.getElementById("dis2").value;
+  dis3 = document.getElementById("dis3").value;
+  dis4 = document.getElementById("dis4").value;
+
+
   brightnessInfluence = document.getElementById("brightnessInfluence").value;
   noiseScale = document.getElementById("noiseScale").value;
   generalRotation = document.getElementById("generalRotation").value;
   randomValue = document.getElementById("randomValue").value;
-
-  // Update displayed distance with unit
-  document.getElementById("disValue").innerText = `${dis} mm`;
-
 
   // Recalculate and draw
   setupPerforation();

@@ -49,12 +49,16 @@
         <span id="size1Value">mm</span>
         <br />
 
+        
+
         <label for="size2">Dot radius2:</label>
         <img id="shapeIcon-size2" src="Icons/rectangle-05.png" alt="Toggle Shape" onclick="toggleShapeForSize('size2')"
           class="shape-icon active" />
         <input type="number" id="size2" min="0" max="5" step="0.01" value="0.5" />
         <span id="size2Value">mm</span>
         <br />
+        
+        
 
         <label for="size3">Dot radius3:</label>
         <img id="shapeIcon-size3" src="Icons/rectangle-05.png" alt="Toggle Shape" onclick="toggleShapeForSize('size3')"
@@ -63,11 +67,30 @@
         <span id="size3Value">mm</span>
         <br />
 
+        
         <label for="size4">Dot radius4:</label>
         <img id="shapeIcon-size4" src="Icons/rectangle-05.png" alt="Toggle Shape" onclick="toggleShapeForSize('size4')"
           class="shape-icon active" />
         <input type="number" id="size4" min="0" max="5" step="0.01" value="0.1" />
         <span id="size4Value">mm</span>
+        <br />
+
+        <label for="dis1">Dot1 Distance:</label>
+        <input type="number" id="dis1" min="1" max="10" step="0.01" value="2.69" />
+        <span id="disValue1">mm(MK10 distance = 2.69mm) </span>
+        <br />
+        <label for="dis2">Dot2 Distance:</label>
+        <input type="number" id="dis2" min="1" max="10" step="0.01" value="2.69" />
+        <span id="disValue2">mm(MK10 distance = 2.69mm) </span>
+        <br />
+        <label for="dis3">Dot3 Distance:</label>
+        <input type="number" id="dis3" min="1" max="10" step="0.01" value="2.69" />
+        <span id="disValue3">mm(MK10 distance = 2.69mm) </span>
+        <br />
+
+        <label for="dis4">Dot3 Distance:</label>
+        <input type="number" id="dis4" min="1" max="10" step="0.01" value="2.69" />
+        <span id="disValue3">mm(MK10 distance = 2.69mm) </span>
         <br />
         <br />
 
@@ -83,12 +106,8 @@
           oninput="updateColorRange('colorRangeW', true)" />
         <br />
 
+        <br />
 
-        <label for="dis">Dot Distance:</label>
-        <input type="number" id="dis" min="1" max="10" step="0.01" value="2.69" />
-        <span id="disValue">2.69 mm(MK10 distance = 2.69mm) </span>
-        <br />
-        <br />
         <p id="canvasSize">________________ Rotation _________________</p>
         <label for="brightnessInfluence">Brightness Influence:</label>
         <input type="range" id="brightnessInfluence" min="0" max="5" step="0.1" value="1" />
@@ -173,8 +192,19 @@
       updatePerforation();
     });
 
-    document.getElementById("dis").addEventListener("input", function () {
-      document.getElementById("disValue").innerText = this.value;
+    document.getElementById("dis1").addEventListener("input", function () {
+      updatePerforation();
+    });
+
+    document.getElementById("dis2").addEventListener("input", function () {
+      updatePerforation();
+    });
+
+    document.getElementById("dis3").addEventListener("input", function () {
+      updatePerforation();
+    });
+
+    document.getElementById("dis4").addEventListener("input", function () {
       updatePerforation();
     });
 
