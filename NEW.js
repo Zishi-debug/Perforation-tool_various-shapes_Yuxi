@@ -32,12 +32,14 @@ let randomValue = 0; // Switch from 0 to 0+ to randomize dot positions
 let generalRotation = 50;
 let Dots = { size1: [], size2: [], size3: [], size4: [] };
 
-let shapeOptions = ["rect", "ellipse", "rhombus", "circle"];
+let shapeOptions = ["rect", "ellipse", "rhombus", "circle", "buthole1", "buthole2"];
 let shapeIcons = {
   rect: "Icons/rectangle-05.png",
   ellipse: "Icons/elipse-03.png",
   rhombus: "Icons/Rhombus-04.png",
-  circle: "Icons/circle-06.png"
+  circle: "Icons/circle-06.png",
+  buthole1: "Icons/buthole1-07.png",
+  buthole2: "Icons/buthole2-08.png"
 };
 
 let shapeBySize = {
@@ -49,6 +51,12 @@ let shapeBySize = {
 
 let currentShapeIndex = 0;
 let currentShape = shapeOptions[currentShapeIndex].type;
+
+const customShapes = {
+  buthole1: "M7.55,3.35H1.72c-.73,0-1.33.51-1.33,1.13v.31c0,.62.6,1.13,1.33,1.13h5.83c.74,0,1.34-.51,1.34-1.13v-.31c0-.62-.6-1.13-1.34-1.13Z",
+  buthole2: "M3.49,1.52h2.25c1.72,0,3.12,1.4,3.12,3.12v0c0,1.72-1.4,3.12-3.12,3.12h-2.25c-1.72,0-3.12-1.4-3.12-3.12v0c0-1.72,1.4-3.12,3.12-3.12Z"
+};
+
 
 function toggleShapeForSize(sizeKey) {
   let current = shapeBySize[sizeKey];
@@ -310,12 +318,20 @@ function exportSVGWithLayers() {
   drawLayer(svgElement, Dots.size4, "Layer_Size4");
 }
 
+
+console.log("Selected shape:", shapeBySize.size1); // for debugging
+
 function drawLayer(svgElement, rectArray, layerName) {
   let layerGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
   layerGroup.setAttribute("id", layerName);
 
-  let sizeKey = layerName.split("_")[1].toLowerCase(); // Extract "size1", etc.
+  let sizeKey = layerName.split("_")[1].toLowerCase(); // e.g., size1
   let shapeType = shapeBySize[sizeKey];
+
+  // 🔍 Debugging log:
+  console.log(`▶ Drawing layer: ${layerName}`);
+  console.log(`   Shape type: ${shapeType}`);
+  console.log(`   Number of dots: ${rectArray.length}`);
 
   for (let r of rectArray) {
     let shape;
@@ -326,23 +342,50 @@ function drawLayer(svgElement, rectArray, layerName) {
       shape.setAttribute("cy", r.y);
       shape.setAttribute("rx", r.size);
       shape.setAttribute("ry", r.size / 1.4);
+      shape.setAttribute("transform", `rotate(${r.angle} ${r.x} ${r.y})`);
+
     } else if (shapeType === "rhombus") {
       shape = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
       let halfW = r.size;
       let halfH = r.size / 2.5;
       let points = [
-        [r.x, r.y - halfH],  // top
-        [r.x + halfW, r.y],  // right
-        [r.x, r.y + halfH],  // bottom
-        [r.x - halfW, r.y]   // left
+        [r.x, r.y - halfH],
+        [r.x + halfW, r.y],
+        [r.x, r.y + halfH],
+        [r.x - halfW, r.y]
       ].map(p => p.join(",")).join(" ");
       shape.setAttribute("points", points);
+      shape.setAttribute("transform", `rotate(${r.angle} ${r.x} ${r.y})`);
+
     } else if (shapeType === "circle") {
       shape = document.createElementNS("http://www.w3.org/2000/svg", "circle");
       shape.setAttribute("cx", r.x);
       shape.setAttribute("cy", r.y);
-      shape.setAttribute("r", r.size); // Radius
-    } else {
+      shape.setAttribute("r", r.size);
+      shape.setAttribute("transform", `rotate(${r.angle} ${r.x} ${r.y})`);
+
+    } else if (shapeType === "buthole1") {
+      shape = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      shape.setAttribute("d", customShapes.buthole1);
+
+      let scaleFactor = (r.size * 2) / 6.5; // width of original buthole1 path is ~6.5
+      shape.setAttribute(
+        "transform",
+        `translate(${r.x},${r.y}) scale(${scaleFactor}) rotate(${r.angle}) translate(-4.63,-4.63)`
+      );
+
+    } else if (shapeType === "buthole2") {
+      shape = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      shape.setAttribute("d", customShapes.buthole2);
+
+      let scaleFactor = (r.size * 2) / 8.5; // original width of rect
+      shape.setAttribute(
+        "transform",
+        `translate(${r.x},${r.y}) scale(${scaleFactor}) rotate(${r.angle}) translate(-4.62,-4.64)`
+      );
+
+    }else {
+      // Default: rectangle
       shape = document.createElementNS("http://www.w3.org/2000/svg", "rect");
       let rectWidth = r.size * 2;
       let rectHeight = r.size;
@@ -350,10 +393,12 @@ function drawLayer(svgElement, rectArray, layerName) {
       shape.setAttribute("y", r.y - rectHeight / 2);
       shape.setAttribute("width", rectWidth);
       shape.setAttribute("height", rectHeight);
+      shape.setAttribute("transform", `rotate(${r.angle} ${r.x} ${r.y})`);
     }
 
+    // Set fill color
     shape.setAttribute("fill", `rgb(${r.color[0]},${r.color[1]},${r.color[2]})`);
-    shape.setAttribute("transform", `rotate(${r.angle} ${r.x} ${r.y})`);
+
     layerGroup.appendChild(shape);
   }
 
@@ -410,7 +455,10 @@ function saveSettings() {
     size4: document.getElementById("size4").value,
     colorRangeB: document.getElementById("colorRangeB").value,
     colorRangeW: document.getElementById("colorRangeW").value,
-    dis: document.getElementById("dis").value,
+    dis1: document.getElementById("dis1").value,
+    dis2: document.getElementById("dis2").value,
+    dis3: document.getElementById("dis3").value,
+    dis4: document.getElementById("dis3").value,
     brightnessInfluence: document.getElementById("brightnessInfluence").value,
     noiseScale: document.getElementById("noiseScale").value,
     generalRotation: document.getElementById("generalRotation").value,
