@@ -32,6 +32,7 @@ let randomValue = 0; // Switch from 0 to 0+ to randomize dot positions
 let generalRotation = 50;
 let Dots = { size1: [], size2: [], size3: [], size4: [] };
 
+
 let shapeOptions = ["rect", "ellipse", "rhombus", "circle", "buthole1", "buthole2"];
 let shapeIcons = {
   rect: "Icons/rectangle-05.png",
@@ -300,6 +301,9 @@ function updatePerforation() {
   document.getElementById("dis3").value = dis3;
   document.getElementById("dis4").value = dis4;
 
+  let useBlackPreview = document.getElementById("blackPreviewToggle").checked;
+  window.useBlackPreview = useBlackPreview; // Store globally
+
   brightnessInfluence = parseFloat(document.getElementById("brightnessInfluence").value);
   noiseScale = parseFloat(document.getElementById("noiseScale").value);
   generalRotation = parseFloat(document.getElementById("generalRotation").value);
@@ -408,7 +412,11 @@ function drawLayer(svgElement, rectArray, layerName) {
     }
 
     // Set fill color
-    shape.setAttribute("fill", `rgb(${r.color[0]},${r.color[1]},${r.color[2]})`);
+    if (window.useBlackPreview) {
+      shape.setAttribute("fill", "black");
+    } else {
+      shape.setAttribute("fill", `rgb(${r.color[0]},${r.color[1]},${r.color[2]})`);
+    }
 
     layerGroup.appendChild(shape);
   }
