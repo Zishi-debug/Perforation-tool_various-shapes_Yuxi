@@ -280,28 +280,39 @@ function setupPerforation() {
 //___________________________________ Update Perforation When Sliders Change __________________________________________
 
 function updatePerforation() {
-  // Get input values
-  size1 = document.getElementById("size1").value;
-  size2 = document.getElementById("size2").value;
-  size3 = document.getElementById("size3").value;
-  size4 = document.getElementById("size4").value;
-  colorRangeB = document.getElementById("colorRangeB").value;
-  colorRangeW = document.getElementById("colorRangeW").value;
+  // Get and clamp input values
+  size1 = parseFloat(document.getElementById("size1").value);
+  size2 = parseFloat(document.getElementById("size2").value);
+  size3 = parseFloat(document.getElementById("size3").value);
+  size4 = parseFloat(document.getElementById("size4").value);
+  colorRangeB = parseFloat(document.getElementById("colorRangeB").value);
+  colorRangeW = parseFloat(document.getElementById("colorRangeW").value);
 
-  dis1 = document.getElementById("dis1").value;
-  dis2 = document.getElementById("dis2").value;
-  dis3 = document.getElementById("dis3").value;
-  dis4 = document.getElementById("dis4").value;
+  // Clamp dot distances to a minimum of 0.2mm
+  dis1 = Math.max(parseFloat(document.getElementById("dis1").value), 0.5);
+  dis2 = Math.max(parseFloat(document.getElementById("dis2").value), 0.5);
+  dis3 = Math.max(parseFloat(document.getElementById("dis3").value), 0.5);
+  dis4 = Math.max(parseFloat(document.getElementById("dis4").value), 0.5);
 
+  // Optional: reflect corrected values back to the input fields
+  document.getElementById("dis1").value = dis1;
+  document.getElementById("dis2").value = dis2;
+  document.getElementById("dis3").value = dis3;
+  document.getElementById("dis4").value = dis4;
 
-  brightnessInfluence = document.getElementById("brightnessInfluence").value;
-  noiseScale = document.getElementById("noiseScale").value;
-  generalRotation = document.getElementById("generalRotation").value;
-  randomValue = document.getElementById("randomValue").value;
+  brightnessInfluence = parseFloat(document.getElementById("brightnessInfluence").value);
+  noiseScale = parseFloat(document.getElementById("noiseScale").value);
+  generalRotation = parseFloat(document.getElementById("generalRotation").value);
+  randomValue = parseFloat(document.getElementById("randomValue").value);
 
   // Recalculate and draw
   setupPerforation();
+
+  if (parseFloat(document.getElementById("dis1").value) < 1) {
+    alert("Minimum dot spacing is 0.2mm to avoid crashes.");
+  }
 }
+
 
 
 //___________________________________ Export SVG __________________________________________
@@ -319,7 +330,7 @@ function exportSVGWithLayers() {
 }
 
 
-console.log("Selected shape:", shapeBySize.size1); // for debugging
+// console.log("Selected shape:", shapeBySize.size1); // for debugging
 
 function drawLayer(svgElement, rectArray, layerName) {
   let layerGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -329,9 +340,9 @@ function drawLayer(svgElement, rectArray, layerName) {
   let shapeType = shapeBySize[sizeKey];
 
   // 🔍 Debugging log:
-  console.log(`▶ Drawing layer: ${layerName}`);
-  console.log(`   Shape type: ${shapeType}`);
-  console.log(`   Number of dots: ${rectArray.length}`);
+  // console.log(`▶ Drawing layer: ${layerName}`);
+  // console.log(`   Shape type: ${shapeType}`);
+  // console.log(`   Number of dots: ${rectArray.length}`);
 
   for (let r of rectArray) {
     let shape;
