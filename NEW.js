@@ -95,8 +95,9 @@ function setupPerforation() {
   let res2 = dis2 * PixelToMilimeterRatio;
   let res3 = dis3 * PixelToMilimeterRatio;
   let res4 = dis4 * PixelToMilimeterRatio;
-  
 
+  let diagonal = Math.sqrt(width * width + height * height);
+  
   Dots = { size1: [], size2: [], size3: [], size4: [] }; // Clear previous Dots
 
   size1 = size1 * PixelToMilimeterRatio; // Blue dots, change the dot radius
@@ -110,169 +111,150 @@ function setupPerforation() {
   let centerY = height / 2;
 
   //draw Dot 1
-  for (let y = -3 * height; y < height * 3; y += res1) {
-    for (let x = -3 * width; x < width * 3; x += res1) {
-      let newX = centerX + (x * cos45 - y * sin45);
-      let newY = centerY + (x * sin45 + y * cos45);
-      if (
-        newX >= -res1 &&
-        newX <= width + res1 &&
-        newY >= -res1 &&
-        newY <= height + res1
-      ) {
-        let br = brightness(
-          img.get(constrain(newX, 0, width - 1), constrain(newY, 0, height - 1))
-        );
+  for (let y = -diagonal; y < diagonal; y += res1) {
+    for (let x = -diagonal; x < diagonal; x += res1) {
 
-        let r = int(map(br, colorRangeB, colorRangeW, 1, 4));
-        let offsetX = random(-res1 * randomValue, res1 * randomValue);
-        let offsetY = random(-res1 * randomValue, res1 * randomValue);
-        let size, color;
+    let newX = centerX + (x * cos45 - y * sin45);
+    let newY = centerY + (x * sin45 + y * cos45);
 
-        let noiseRotation = int(noise(x * noiseScale, y * noiseScale) * 360 * noiseScale * 10);
-        let brightnessRotation =
-          map(br, colorRangeB, colorRangeW, -90, 90) * brightnessInfluence;
-        let generalRotationD = parseFloat(generalRotation);
-        let angle = noiseRotation + brightnessRotation + generalRotationD;
-        //console.log("angle:", noiseRotation);
+    // Skip if outside actual canvas bounds
+    if (newX < 0 || newX >= width || newY < 0 || newY >= height) continue;
 
-        if (r === 1) {
-          size = size1;
-          color = [0, 0, 255];
-          Dots.size1.push({
-            x: newX + offsetX,
-            y: newY + offsetY,
-            size,
-            color,
-            angle,
-          });
-        } 
-      }
+    let br = brightness(
+      img.get(constrain(newX, 0, width - 1), constrain(newY, 0, height - 1))
+    );
+
+    let r = int(map(br, colorRangeB, colorRangeW, 1, 4));
+
+    // Only calculate and push if r === 1
+    if (r === 1) {
+      let offsetX = random(-res1 * randomValue, res1 * randomValue);
+      let offsetY = random(-res1 * randomValue, res1 * randomValue);
+
+      // Rotation calculations moved inside for performance
+      let noiseRotation = int(noise(x * noiseScale, y * noiseScale) * 360 * noiseScale * 10);
+      let brightnessRotation = map(br, colorRangeB, colorRangeW, -90, 90) * brightnessInfluence;
+      let angle = noiseRotation + brightnessRotation + parseFloat(generalRotation);
+
+      Dots.size1.push({
+        x: newX + offsetX,
+        y: newY + offsetY,
+        size: size1,
+        color: window.useBlackPreview ? [0, 0, 0] : [0, 0, 255],
+        angle,
+      });
     }
   }
+}
+
 
   //draw Dot 2
-  for (let y = -3 * height; y < height * 3; y += res2) {
-    for (let x = -3 * width; x < width * 3; x += res2) {
+  for (let y = -diagonal; y < diagonal; y += res2) {
+    for (let x = -diagonal; x < diagonal; x += res2) {
+  
       let newX = centerX + (x * cos45 - y * sin45);
       let newY = centerY + (x * sin45 + y * cos45);
-      if (
-        newX >= -res2 &&
-        newX <= width + res2 &&
-        newY >= -res2 &&
-        newY <= height + res2
-      ) {
-        let br = brightness(
-          img.get(constrain(newX, 0, width - 1), constrain(newY, 0, height - 1))
-        );
-
-        let r = int(map(br, colorRangeB, colorRangeW, 1, 4));
+  
+      // Skip if outside actual canvas bounds
+      if (newX < 0 || newX >= width || newY < 0 || newY >= height) continue;
+  
+      let br = brightness(
+        img.get(constrain(newX, 0, width - 1), constrain(newY, 0, height - 1))
+      );
+  
+      let r = int(map(br, colorRangeB, colorRangeW, 1, 4));
+  
+      // Only calculate and push if r === 1
+      if (r === 2) {
         let offsetX = random(-res2 * randomValue, res2 * randomValue);
         let offsetY = random(-res2 * randomValue, res2 * randomValue);
-        let size, color;
-
+  
+        // Rotation calculations moved inside for performance
         let noiseRotation = int(noise(x * noiseScale, y * noiseScale) * 360 * noiseScale * 10);
-        let brightnessRotation =
-          map(br, colorRangeB, colorRangeW, -90, 90) * brightnessInfluence;
-        let generalRotationD = parseFloat(generalRotation);
-        let angle = noiseRotation + brightnessRotation + generalRotationD;
-        //console.log("angle:", noiseRotation);
-
-        if (r === 2) {
-          size = size2;
-          color = [0, 255,0];
-          Dots.size2.push({
-            x: newX + offsetX,
-            y: newY + offsetY,
-            size,
-            color,
-            angle,
-          });
-        } 
+        let brightnessRotation = map(br, colorRangeB, colorRangeW, -90, 90) * brightnessInfluence;
+        let angle = noiseRotation + brightnessRotation + parseFloat(generalRotation);
+  
+        Dots.size2.push({
+          x: newX + offsetX,
+          y: newY + offsetY,
+          size: size2,
+          color: window.useBlackPreview ? [0, 0, 0] : [0, 255, 0],
+          angle,
+        });
       }
     }
   }
 
   //draw Dot 3
-  for (let y = -3 * height; y < height * 3; y += res3) {
-    for (let x = -3 * width; x < width * 3; x += res3) {
+  for (let y = -diagonal; y < diagonal; y += res3) {
+    for (let x = -diagonal; x < diagonal; x += res3) {
+  
       let newX = centerX + (x * cos45 - y * sin45);
       let newY = centerY + (x * sin45 + y * cos45);
-      if (
-        newX >= -res3 &&
-        newX <= width + res3 &&
-        newY >= -res3 &&
-        newY <= height + res3
-      ) {
-        let br = brightness(
-          img.get(constrain(newX, 0, width - 1), constrain(newY, 0, height - 1))
-        );
-
-        let r = int(map(br, colorRangeB, colorRangeW, 1, 4));
+  
+      // Skip if outside actual canvas bounds
+      if (newX < 0 || newX >= width || newY < 0 || newY >= height) continue;
+  
+      let br = brightness(
+        img.get(constrain(newX, 0, width - 1), constrain(newY, 0, height - 1))
+      );
+  
+      let r = int(map(br, colorRangeB, colorRangeW, 1, 4));
+  
+      // Only calculate and push if r === 1
+      if (r === 3) {
         let offsetX = random(-res3 * randomValue, res3 * randomValue);
         let offsetY = random(-res3 * randomValue, res3 * randomValue);
-        let size, color;
-
+  
+        // Rotation calculations moved inside for performance
         let noiseRotation = int(noise(x * noiseScale, y * noiseScale) * 360 * noiseScale * 10);
-        let brightnessRotation =
-          map(br, colorRangeB, colorRangeW, -90, 90) * brightnessInfluence;
-        let generalRotationD = parseFloat(generalRotation);
-        let angle = noiseRotation + brightnessRotation + generalRotationD;
-        //console.log("angle:", noiseRotation);
-
-        if (r === 3) {
-          size = size3;
-          color = [255,0,0];
-          Dots.size3.push({
-            x: newX + offsetX,
-            y: newY + offsetY,
-            size,
-            color,
-            angle,
-          });
-        } 
+        let brightnessRotation = map(br, colorRangeB, colorRangeW, -90, 90) * brightnessInfluence;
+        let angle = noiseRotation + brightnessRotation + parseFloat(generalRotation);
+  
+        Dots.size3.push({
+          x: newX + offsetX,
+          y: newY + offsetY,
+          size: size3,
+          color: window.useBlackPreview ? [0, 0, 0] : [255,0,0],
+          angle,
+        });
       }
     }
   }
 
   //draw Dot 4
-   for (let y = -3 * height; y < height * 3; y +=res4) {
-    for (let x = -3 * width; x < width * 3; x +=res4) {
+  for (let y = -diagonal; y < diagonal; y += res4) {
+    for (let x = -diagonal; x < diagonal; x += res4) {
+  
       let newX = centerX + (x * cos45 - y * sin45);
       let newY = centerY + (x * sin45 + y * cos45);
-      if (
-        newX >= -res3 &&
-        newX <= width +res4 &&
-        newY >= -res3 &&
-        newY <= height +res4
-      ) {
-        let br = brightness(
-          img.get(constrain(newX, 0, width - 1), constrain(newY, 0, height - 1))
-        );
-
-        let r = int(map(br, colorRangeB, colorRangeW, 1, 4));
-        let offsetX = random(-res3 * randomValue,res4 * randomValue);
-        let offsetY = random(-res3 * randomValue,res4 * randomValue);
-        let size, color;
-
+  
+      // Skip if outside actual canvas bounds
+      if (newX < 0 || newX >= width || newY < 0 || newY >= height) continue;
+  
+      let br = brightness(
+        img.get(constrain(newX, 0, width - 1), constrain(newY, 0, height - 1))
+      );
+  
+      let r = int(map(br, colorRangeB, colorRangeW, 1, 4));
+  
+      // Only calculate and push if r === 1
+      if (r === 4) {
+        let offsetX = random(-res4 * randomValue, res4 * randomValue);
+        let offsetY = random(-res4 * randomValue, res4 * randomValue);
+  
+        // Rotation calculations moved inside for performance
         let noiseRotation = int(noise(x * noiseScale, y * noiseScale) * 360 * noiseScale * 10);
-        let brightnessRotation =
-          map(br, colorRangeB, colorRangeW, -90, 90) * brightnessInfluence;
-        let generalRotationD = parseFloat(generalRotation);
-        let angle = noiseRotation + brightnessRotation + generalRotationD;
-        //console.log("angle:", noiseRotation);
-
-        if (r === 4) {
-          size = size4;
-          color = [150,0];
-          Dots.size4.push({
-            x: newX + offsetX,
-            y: newY + offsetY,
-            size,
-            color,
-            angle,
-          });
-        } 
+        let brightnessRotation = map(br, colorRangeB, colorRangeW, -90, 90) * brightnessInfluence;
+        let angle = noiseRotation + brightnessRotation + parseFloat(generalRotation);
+  
+        Dots.size4.push({
+          x: newX + offsetX,
+          y: newY + offsetY,
+          size: size4,
+          color: window.useBlackPreview ? [0, 0, 0] : [150,0],
+          angle,
+        });
       }
     }
   }
