@@ -271,17 +271,11 @@ function updatePerforation() {
   colorRangeB = parseFloat(document.getElementById("colorRangeB").value);
   colorRangeW = parseFloat(document.getElementById("colorRangeW").value);
 
-  // Clamp dot distances to a minimum of 0.2mm
-  dis1 = Math.max(parseFloat(document.getElementById("dis1").value), 0.5);
-  dis2 = Math.max(parseFloat(document.getElementById("dis2").value), 0.5);
-  dis3 = Math.max(parseFloat(document.getElementById("dis3").value), 0.5);
-  dis4 = Math.max(parseFloat(document.getElementById("dis4").value), 0.5);
-
-  // Optional: reflect corrected values back to the input fields
-  document.getElementById("dis1").value = dis1;
-  document.getElementById("dis2").value = dis2;
-  document.getElementById("dis3").value = dis3;
-  document.getElementById("dis4").value = dis4;
+  // Clamp dot distances to a minimum of 0.5mm
+  dis1 = Math.max(parseFloat(document.getElementById("dis1").value), 0.50);
+  dis2 = Math.max(parseFloat(document.getElementById("dis2").value), 0.50);
+  dis3 = Math.max(parseFloat(document.getElementById("dis3").value), 0.50);
+  dis4 = Math.max(parseFloat(document.getElementById("dis4").value), 0.50);
 
   let useBlackPreview = document.getElementById("blackPreviewToggle").checked;
   window.useBlackPreview = useBlackPreview; // Store globally
@@ -294,8 +288,8 @@ function updatePerforation() {
   // Recalculate and draw
   setupPerforation();
 
-  if (parseFloat(document.getElementById("dis1").value) < 1) {
-    alert("Minimum dot spacing is 0.2mm to avoid crashes.");
+  if (parseFloat(dis1 < 0.50)) {
+    alert("Minimum dot spacing is 0.5mm to avoid crashes.");
   }
 }
 
