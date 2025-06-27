@@ -288,9 +288,9 @@ function updatePerforation() {
   // Recalculate and draw
   setupPerforation();
 
-  if (parseFloat(dis1 < 0.50)) {
-    alert("Minimum dot spacing is 0.5mm to avoid crashes.");
-  }
+  // if (parseFloat(dis1 < 0.50)) {
+  //   alert("Minimum dot spacing is 0.5mm to avoid crashes.");
+  // }
 }
 
 
