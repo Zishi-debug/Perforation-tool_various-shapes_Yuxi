@@ -16,7 +16,7 @@ let dis1 = 2.69; // Distance for size1
 let dis2 = 2.69; // Distance for size2
 let dis3 = 2.69; // Distance for size3
 let dis4 = 2.69; // Distance for size4
-
+let brightnessMap = [];
 
 let brightnessInfluence = 1; // Adjust this value to control how much brightness affects rotation
 
@@ -27,7 +27,13 @@ let size3 = 0.3; // Red dots, change the dot radius
 let size4 = 0.1; // Grey dots, change the dot radius
 
 let colorRangeB = 0; // Black threshold for brightness mapping
-let colorRangeW = 90; // White threshold for brightness mapping
+let colorRangeW = 208; // White threshold for brightness mapping
+
+let warpIntensity = 8;
+let warpScale = 0.01;
+
+let originalBrightnessMap = [];  // Store original, untouched brightness data
+
 let randomValue = 0; // Switch from 0 to 0+ to randomize dot positions
 let generalRotation = 50;
 let Dots = { size1: [], size2: [], size3: [], size4: [] };
@@ -59,6 +65,14 @@ const customShapes = {
 };
 
 
+function debounce(func, wait = 150) {
+  let timeout;
+  return function (...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
+}
+
 function toggleShapeForSize(sizeKey) {
   let current = shapeBySize[sizeKey];
   let index = shapeOptions.indexOf(current);
@@ -77,7 +91,48 @@ function preload() {
     resizeCanvasToImage();
   }); // Input your own image
 }
+function computeBrightnessMap() {
+  img.loadPixels();
+  originalBrightnessMap = [];
 
+  for (let y = 0; y < img.height; y++) {
+    let row = [];
+    for (let x = 0; x < img.width; x++) {
+      let i = 4 * (y * img.width + x);
+      let r = img.pixels[i];
+      let g = img.pixels[i + 1];
+      let b = img.pixels[i + 2];
+      let br = (r + g + b) / 3;
+      row.push(br);
+    }
+    originalBrightnessMap.push(row);
+  }
+
+  brightnessMap = originalBrightnessMap;  // Also assign to main map initially
+}
+
+function warpBrightnessMap(intensity = 10, scale = 0.01) {
+  if (!originalBrightnessMap || originalBrightnessMap.length === 0) return;
+
+  let warped = [];
+
+  for (let y = 0; y < img.height; y++) {
+    let row = [];
+    for (let x = 0; x < img.width; x++) {
+      let angle = noise(x * scale, y * scale) * TWO_PI;
+      let dx = cos(angle) * intensity;
+      let dy = sin(angle) * intensity;
+
+      let nx = int(constrain(x + dx, 0, img.width - 1));
+      let ny = int(constrain(y + dy, 0, img.height - 1));
+
+      row.push(originalBrightnessMap[ny][nx]);  // Use unwarped original data
+    }
+    warped.push(row);
+  }
+
+  brightnessMap = warped;
+}
 //___________________________________ Canvas Setup __________________________________________
 
 function setup() {
@@ -85,16 +140,14 @@ function setup() {
   canvas.parent('sketch-holder');
   noLoop();
   img.loadPixels();
+  computeBrightnessMap();
+  warpBrightnessMap(warpIntensity, warpScale);
   setupPerforation();
 }
 
 //___________________________________ Main Perforation Logic __________________________________________
 
 function setupPerforation() {
-  let res1 = dis1 * PixelToMilimeterRatio;
-  let res2 = dis2 * PixelToMilimeterRatio;
-  let res3 = dis3 * PixelToMilimeterRatio;
-  let res4 = dis4 * PixelToMilimeterRatio;
 
   let diagonal = Math.sqrt(width * width + height * height);
   
@@ -111,153 +164,111 @@ function setupPerforation() {
   let centerY = height / 2;
 
   //draw Dot 1
-  for (let y = -diagonal; y < diagonal; y += res1) {
-    for (let x = -diagonal; x < diagonal; x += res1) {
-
-    let newX = centerX + (x * cos45 - y * sin45);
-    let newY = centerY + (x * sin45 + y * cos45);
-
-    // Skip if outside actual canvas bounds
-    if (newX < 0 || newX >= width || newY < 0 || newY >= height) continue;
-
-    let br = brightness(
-      img.get(constrain(newX, 0, width - 1), constrain(newY, 0, height - 1))
-    );
-
-    let r = int(map(br, colorRangeB, colorRangeW, 1, 4));
-
-    // Only calculate and push if r === 1
-    if (r === 1) {
-      let offsetX = random(-res1 * randomValue, res1 * randomValue);
-      let offsetY = random(-res1 * randomValue, res1 * randomValue);
-
-      // Rotation calculations moved inside for performance
-      let noiseRotation = int(noise(x * noiseScale, y * noiseScale) * 360 * noiseScale * 10);
-      let brightnessRotation = map(br, colorRangeB, colorRangeW, -90, 90) * brightnessInfluence;
-      let angle = noiseRotation + brightnessRotation + parseFloat(generalRotation);
-
-      Dots.size1.push({
-        x: newX + offsetX,
-        y: newY + offsetY,
-        size: size1,
-        color: window.useBlackPreview ? [0, 0, 0] : [0, 0, 255],
-        angle,
-      });
-    }
-  }
-}
-
+ new DotLayer({
+  sizeKey: "size1",
+  radius: size1,
+  resolution: dis1,
+  color: [0, 0, 255],
+  index: 1
+}).generate({
+  PixelToMilimeterRatio,
+  brightnessMap,
+  Dots,
+  width,
+  height,
+  randomValue,
+  colorRangeB,
+  colorRangeW,
+  brightnessInfluence,
+  noiseScale,
+  generalRotation,
+  centerX,
+  centerY,
+  diagonal,
+  cos45,
+  sin45,
+  useBlackPreview: window.useBlackPreview
+});
 
   //draw Dot 2
-  for (let y = -diagonal; y < diagonal; y += res2) {
-    for (let x = -diagonal; x < diagonal; x += res2) {
-  
-      let newX = centerX + (x * cos45 - y * sin45);
-      let newY = centerY + (x * sin45 + y * cos45);
-  
-      // Skip if outside actual canvas bounds
-      if (newX < 0 || newX >= width || newY < 0 || newY >= height) continue;
-  
-      let br = brightness(
-        img.get(constrain(newX, 0, width - 1), constrain(newY, 0, height - 1))
-      );
-  
-      let r = int(map(br, colorRangeB, colorRangeW, 1, 4));
-  
-      // Only calculate and push if r === 1
-      if (r === 2) {
-        let offsetX = random(-res2 * randomValue, res2 * randomValue);
-        let offsetY = random(-res2 * randomValue, res2 * randomValue);
-  
-        // Rotation calculations moved inside for performance
-        let noiseRotation = int(noise(x * noiseScale, y * noiseScale) * 360 * noiseScale * 10);
-        let brightnessRotation = map(br, colorRangeB, colorRangeW, -90, 90) * brightnessInfluence;
-        let angle = noiseRotation + brightnessRotation + parseFloat(generalRotation);
-  
-        Dots.size2.push({
-          x: newX + offsetX,
-          y: newY + offsetY,
-          size: size2,
-          color: window.useBlackPreview ? [0, 0, 0] : [0, 255, 0],
-          angle,
-        });
-      }
-    }
-  }
+  new DotLayer({
+    sizeKey: "size2",
+    radius: size2,
+    resolution: dis2,
+    color: [0, 255, 0],
+    index: 2
+  }).generate({
+    PixelToMilimeterRatio,
+    brightnessMap,
+    Dots,
+    width,
+    height,
+    randomValue,
+    colorRangeB,
+    colorRangeW,
+    brightnessInfluence,
+    noiseScale,
+    generalRotation,
+    centerX,
+    centerY,
+    diagonal,
+    cos45,
+    sin45,
+    useBlackPreview: window.useBlackPreview
+  });
 
   //draw Dot 3
-  for (let y = -diagonal; y < diagonal; y += res3) {
-    for (let x = -diagonal; x < diagonal; x += res3) {
-  
-      let newX = centerX + (x * cos45 - y * sin45);
-      let newY = centerY + (x * sin45 + y * cos45);
-  
-      // Skip if outside actual canvas bounds
-      if (newX < 0 || newX >= width || newY < 0 || newY >= height) continue;
-  
-      let br = brightness(
-        img.get(constrain(newX, 0, width - 1), constrain(newY, 0, height - 1))
-      );
-  
-      let r = int(map(br, colorRangeB, colorRangeW, 1, 4));
-  
-      // Only calculate and push if r === 1
-      if (r === 3) {
-        let offsetX = random(-res3 * randomValue, res3 * randomValue);
-        let offsetY = random(-res3 * randomValue, res3 * randomValue);
-  
-        // Rotation calculations moved inside for performance
-        let noiseRotation = int(noise(x * noiseScale, y * noiseScale) * 360 * noiseScale * 10);
-        let brightnessRotation = map(br, colorRangeB, colorRangeW, -90, 90) * brightnessInfluence;
-        let angle = noiseRotation + brightnessRotation + parseFloat(generalRotation);
-  
-        Dots.size3.push({
-          x: newX + offsetX,
-          y: newY + offsetY,
-          size: size3,
-          color: window.useBlackPreview ? [0, 0, 0] : [255,0,0],
-          angle,
-        });
-      }
-    }
-  }
-
+  new DotLayer({
+    sizeKey: "size3",
+    radius: size3,
+    resolution: dis3,
+    color: [255,0, 0],
+    index: 3
+  }).generate({
+    PixelToMilimeterRatio,
+    brightnessMap,
+    Dots,
+    width,
+    height,
+    randomValue,
+    colorRangeB,
+    colorRangeW,
+    brightnessInfluence,
+    noiseScale,
+    generalRotation,
+    centerX,
+    centerY,
+    diagonal,
+    cos45,
+    sin45,
+    useBlackPreview: window.useBlackPreview
+  });
   //draw Dot 4
-  for (let y = -diagonal; y < diagonal; y += res4) {
-    for (let x = -diagonal; x < diagonal; x += res4) {
-  
-      let newX = centerX + (x * cos45 - y * sin45);
-      let newY = centerY + (x * sin45 + y * cos45);
-  
-      // Skip if outside actual canvas bounds
-      if (newX < 0 || newX >= width || newY < 0 || newY >= height) continue;
-  
-      let br = brightness(
-        img.get(constrain(newX, 0, width - 1), constrain(newY, 0, height - 1))
-      );
-  
-      let r = int(map(br, colorRangeB, colorRangeW, 1, 4));
-  
-      // Only calculate and push if r === 1
-      if (r === 4) {
-        let offsetX = random(-res4 * randomValue, res4 * randomValue);
-        let offsetY = random(-res4 * randomValue, res4 * randomValue);
-  
-        // Rotation calculations moved inside for performance
-        let noiseRotation = int(noise(x * noiseScale, y * noiseScale) * 360 * noiseScale * 10);
-        let brightnessRotation = map(br, colorRangeB, colorRangeW, -90, 90) * brightnessInfluence;
-        let angle = noiseRotation + brightnessRotation + parseFloat(generalRotation);
-  
-        Dots.size4.push({
-          x: newX + offsetX,
-          y: newY + offsetY,
-          size: size4,
-          color: window.useBlackPreview ? [0, 0, 0] : [150,0],
-          angle,
-        });
-      }
-    }
-  }
+  new DotLayer({
+    sizeKey: "size4",
+    radius: size4,
+    resolution: dis4,
+    color: [150, 0],
+    index: 4
+  }).generate({
+    PixelToMilimeterRatio,
+    brightnessMap,
+    Dots,
+    width,
+    height,
+    randomValue,
+    colorRangeB,
+    colorRangeW,
+    brightnessInfluence,
+    noiseScale,
+    generalRotation,
+    centerX,
+    centerY,
+    diagonal,
+    cos45,
+    sin45,
+    useBlackPreview: window.useBlackPreview
+  });
   exportSVGWithLayers();
 }
 //___________________________________ Update Perforation When Sliders Change __________________________________________
@@ -268,6 +279,7 @@ function updatePerforation() {
   size2 = parseFloat(document.getElementById("size2").value);
   size3 = parseFloat(document.getElementById("size3").value);
   size4 = parseFloat(document.getElementById("size4").value);
+
   colorRangeB = parseFloat(document.getElementById("colorRangeB").value);
   colorRangeW = parseFloat(document.getElementById("colorRangeW").value);
 
@@ -284,6 +296,19 @@ function updatePerforation() {
   noiseScale = parseFloat(document.getElementById("noiseScale").value);
   generalRotation = parseFloat(document.getElementById("generalRotation").value);
   randomValue = parseFloat(document.getElementById("randomValue").value);
+
+   // Warp toggle and parameters
+   const enableWarp = document.getElementById("enableWarp")?.checked || false;
+   const warpIntensity = parseFloat(document.getElementById("warpIntensity")?.value || 0);
+   const warpScale = parseFloat(document.getElementById("warpScale")?.value || 100);
+   window.enableWarp = enableWarp;
+ 
+   // Generate brightness map (warped or original)
+   if (enableWarp) {
+     warpBrightnessMap(warpIntensity, warpScale);
+   } else {
+     computeBrightnessMap();
+   }
 
   // Recalculate and draw
   setupPerforation();
@@ -419,6 +444,8 @@ function getRotationAngle(x, y) {
 function loadNewImage(imageSrc) {
   img = loadImage(imageSrc, function () {
     resizeCanvasToImage();
+    computeBrightnessMap();
+    //warpBrightnessMap(warpIntensity, warpScale);
     updatePerforation(); // Refresh with the new image
   });
 }
@@ -502,5 +529,7 @@ function handleFileLoad(event) {
 //___________________________________ Key Press to Save SVG __________________________________________
 
 function saveSVG() {
+  //updatePerforation();           // Refresh all values and regenerate dot data
+  //exportSVGWithLayers();
   save("Perforation_Tool.svg");
 }
