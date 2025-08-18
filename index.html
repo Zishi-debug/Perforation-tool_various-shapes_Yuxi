@@ -37,69 +37,71 @@
       <!-- This div is where p5.js will insert the canvas -->
       <div id="sketch-holder"></div>
 
+      <div class="container">
+        <div class="controls">
 
-      <div class="controls">
-    
-        <!-- Slider UI -->
-        <label for="size1">Dot radius1:</label>
-        <img id="shapeIcon-size1" src="Icons/rectangle-05.png" alt="Toggle Shape" onclick="toggleShapeForSize('size1')"
-          class="shape-icon active" />
+          <!-- Slider UI -->
+          <label for="size1">Dot radius1:</label>
+          <img id="shapeIcon-size1" src="Icons/rectangle-05.png" alt="Toggle Shape"
+            onclick="toggleShapeForSize('size1')" class="shape-icon active" />
 
-        <input type="number" id="size1" min="0" max="5" step="0.01" value="0.8" />
-        <span id="size1Value">mm</span>
-        <br />
+          <input type="number" id="size1" min="0" max="5" step="0.01" value="0.8" />
+          <span id="size1Value">mm</span>
+          <br />
 
-        
 
-        <label for="size2">Dot radius2:</label>
-        <img id="shapeIcon-size2" src="Icons/rectangle-05.png" alt="Toggle Shape" onclick="toggleShapeForSize('size2')"
-          class="shape-icon active" />
-        <input type="number" id="size2" min="0" max="5" step="0.01" value="0.5" />
-        <span id="size2Value">mm</span>
-        <br />
-        
-        
 
-        <label for="size3">Dot radius3:</label>
-        <img id="shapeIcon-size3" src="Icons/rectangle-05.png" alt="Toggle Shape" onclick="toggleShapeForSize('size3')"
-          class="shape-icon active" />
-        <input type="number" id="size3" min="0" max="5" step="0.01" value="0.3" />
-        <span id="size3Value">mm</span>
-        <br />
+          <label for="size2">Dot radius2:</label>
+          <img id="shapeIcon-size2" src="Icons/rectangle-05.png" alt="Toggle Shape"
+            onclick="toggleShapeForSize('size2')" class="shape-icon active" />
+          <input type="number" id="size2" min="0" max="5" step="0.01" value="0.5" />
+          <span id="size2Value">mm</span>
+          <br />
 
-        
-        <label for="size4">Dot radius4:</label>
-        <img id="shapeIcon-size4" src="Icons/rectangle-05.png" alt="Toggle Shape" onclick="toggleShapeForSize('size4')"
-          class="shape-icon active" />
-        <input type="number" id="size4" min="0" max="5" step="0.01" value="0.1" />
-        <span id="size4Value">mm</span>
-        <br />
 
-        <label for="dis1">Dot1 Distance:</label>
-        <input type="number" id="dis1" min="0.5" max="10" step="0.01" value="2.69" lang="en"  />
-        <span id="disValue1">mm(MK10 distance = 2.69mm) </span>
-        <br />
-        <label for="dis2">Dot2 Distance:</label>
-        <input type="number" id="dis2" min="0.5" max="10" step="0.01" value="2.69" />
-        <span id="disValue2">mm(MK10 distance = 2.69mm) </span>
-        <br />
-        <label for="dis3">Dot3 Distance:</label>
-        <input type="number" id="dis3" min="0.5" max="10" step="0.01" value="2.69" />
-        <span id="disValue3">mm(MK10 distance = 2.69mm) </span>
-        <br />
 
-        <label for="dis4">Dot4 Distance:</label>
-        <input type="number" id="dis4" min="0.5" max="10" step="0.01" value="2.69" />
-        <span id="disValue4">mm(MK10 distance = 2.69mm) </span>
-        <br />
+          <label for="size3">Dot radius3:</label>
+          <img id="shapeIcon-size3" src="Icons/rectangle-05.png" alt="Toggle Shape"
+            onclick="toggleShapeForSize('size3')" class="shape-icon active" />
+          <input type="number" id="size3" min="0" max="5" step="0.01" value="0.3" />
+          <span id="size3Value">mm</span>
+          <br />
 
-        <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
-         <label for="blackPreviewToggle" style="margin: 0; cursor: pointer;">Black Dot </label>
-         <input type="checkbox" id="blackPreviewToggle" onchange="updatePerforation()">
+
+          <label for="size4">Dot radius4:</label>
+          <img id="shapeIcon-size4" src="Icons/rectangle-05.png" alt="Toggle Shape"
+            onclick="toggleShapeForSize('size4')" class="shape-icon active" />
+          <input type="number" id="size4" min="0" max="5" step="0.01" value="0.1" />
+          <span id="size4Value">mm</span>
+          <br />
         </div>
-          
-        <br />
 
+        <div class="controls">
+          <label for="dis1">Dot1 Distance:</label>
+          <input type="number" id="dis1" min="0.5" max="10" step="0.01" value="2.69" lang="en" />
+          <span id="disValue1">mm(MK10 distance = 2.69mm) </span>
+          <br />
+          <label for="dis2">Dot2 Distance:</label>
+          <input type="number" id="dis2" min="0.5" max="10" step="0.01" value="2.69" />
+          <span id="disValue2">mm(MK10 distance = 2.69mm) </span>
+          <br />
+          <label for="dis3">Dot3 Distance:</label>
+          <input type="number" id="dis3" min="0.5" max="10" step="0.01" value="2.69" />
+          <span id="disValue3">mm(MK10 distance = 2.69mm) </span>
+          <br />
+
+          <label for="dis4">Dot4 Distance:</label>
+          <input type="number" id="dis4" min="0.5" max="10" step="0.01" value="2.69" />
+          <span id="disValue4">mm(MK10 distance = 2.69mm) </span>
+          <br />
+
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+            <label for="blackPreviewToggle" style="margin: 0; cursor: pointer;">Black Dot </label>
+            <input type="checkbox" id="blackPreviewToggle" onchange="updatePerforation()">
+          </div>
+
+          <br />
+        
         <label for="colorRangeB">Color Range Black:</label>
         <input type="range" id="colorRangeB" min="0" max="255" value="0" oninput="updateColorRange('colorRangeB')" />
         <input type="number" id="colorRangeBInput" min="0" max="255" value="0"
@@ -111,71 +113,75 @@
         <input type="number" id="colorRangeWInput" min="0" max="255" value="208"
           oninput="updateColorRange('colorRangeW', true)" />
         <br />
+      </div>
 
-        <p id="canvasSize">________________ Edge Blend _________________</p>
-        <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
-          <label for="enableWarp" style="margin: 0; cursor: pointer;">Edge Blend </label>
-          <input type="checkbox" id="enableWarp" onchange="updatePerforation()">
-         </div>
+        <div class="controls">
+          <p id="canvasSize">________________ Edge Blend _________________</p>
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+            <label for="enableWarp" style="margin: 0; cursor: pointer;">Edge Blend </label>
+            <input type="checkbox" id="enableWarp" onchange="updatePerforation()">
+          </div>
 
-        <!-- Warp Intensity Control -->
-<label for="warpIntensity">Blend Intensity:</label>
-<input type="range" id="warpIntensity" min="0" max="40" step="1" value="30" oninput="updateWarpValue('warpIntensity')" />
-<input type="number" id="warpIntensityInput" min="0" max="40" step="1" value="30" 
-  oninput="updateWarpValue('warpIntensity', true)" />
+          <!-- Warp Intensity Control -->
+          <label for="warpIntensity">Blend Intensity:</label>
+          <input type="range" id="warpIntensity" min="0" max="40" step="1" value="30"
+            oninput="updateWarpValue('warpIntensity')" />
+          <input type="number" id="warpIntensityInput" min="0" max="40" step="1" value="30"
+            oninput="updateWarpValue('warpIntensity', true)" />
 
-<br />
+          <br />
 
-<!-- Warp Scale Control -->
-<label for="warpScale">Blend Scale:</label>
-<input type="range" id="warpScale" min="0" max="3" step="0.01" value="2" oninput="updateWarpValue('warpScale')" />
-<input type="number" id="warpScaleInput" min="0.01" max="3" step="0.01" value="2" 
-  oninput="updateWarpValue('warpScale', true)" />
+          <!-- Warp Scale Control -->
+          <label for="warpScale">Blend Scale:</label>
+          <input type="range" id="warpScale" min="0" max="3" step="0.01" value="2"
+            oninput="updateWarpValue('warpScale')" />
+          <input type="number" id="warpScaleInput" min="0.01" max="3" step="0.01" value="2"
+            oninput="updateWarpValue('warpScale', true)" />
 
-<br />
+          <br />
 
-        <br />
+          <br />
 
-        <p id="canvasSize">________________ Rotation _________________</p>
-        <label for="brightnessInfluence">Brightness Influence:</label>
-        <input type="range" id="brightnessInfluence" min="0" max="5" step="0.1" value="1" />
-        <span id="brightnessInfluenceValue">1</span>
-        <br />
+          <p id="canvasSize">________________ Rotation _________________</p>
+          <label for="brightnessInfluence">Brightness Influence:</label>
+          <input type="range" id="brightnessInfluence" min="0" max="5" step="0.1" value="1" />
+          <span id="brightnessInfluenceValue">1</span>
+          <br />
 
-        <label for="noiseScale">Noise Scale:</label>
-        <input type="range" id="noiseScale" min="0.00" max="0.1" step="0.001" value="0.01" />
-        <span id="noiseScaleValue">0.01</span>
-        <br />
+          <label for="noiseScale">Noise Scale:</label>
+          <input type="range" id="noiseScale" min="0.00" max="0.1" step="0.001" value="0.01" />
+          <span id="noiseScaleValue">0.01</span>
+          <br />
 
-        <label for="generalRotation">General Rotation:</label>
-        <input type="range" id="generalRotation" min="0" max="360" step="1" value="50" />
-        <span id="generalRotationValue">50</span>
-        <br />
+          <label for="generalRotation">General Rotation:</label>
+          <input type="range" id="generalRotation" min="0" max="360" step="1" value="50" />
+          <span id="generalRotationValue">50</span>
+          <br />
 
-        <label for="randomValue">Randomnise each Position:</label>
-        <input type="number" id="randomValue" min="0" max="1" step="0.01" value="0" />
-        <span id="randomValueValue">0</span>
+          <label for="randomValue">Randomnise each Position:</label>
+          <input type="number" id="randomValue" min="0" max="1" step="0.01" value="0" />
+          <span id="randomValueValue">0</span>
 
-        <br />
+          <br />
 
-        <div class="settings-buttons">
-          <button class="btn" onclick="saveSVG()">🖨️ Save SVG</button>
-          <button class="btn" onclick="saveSettings()">💾 Save Settings</button>
+          <div class="settings-buttons">
+            <button class="btn" onclick="saveSVG()">🖨️ Save SVG</button>
+            <button class="btn" onclick="saveSettings()">💾 Save Settings</button>
 
-          <button class="btn" onclick="document.getElementById('loadSettingsFile').click()">
-            📂 Load Settings
-          </button>
+            <button class="btn" onclick="document.getElementById('loadSettingsFile').click()">
+              📂 Load Settings
+            </button>
 
 
 
-          <input type="file" id="loadSettingsFile" onchange="handleFileLoad(event)" style="display: none;" />
+            <input type="file" id="loadSettingsFile" onchange="handleFileLoad(event)" style="display: none;" />
+          </div>
         </div>
+
 
       </div>
     </div>
   </div>
-
-
 
 
   <script src="DotLayer.js"></script>
@@ -320,19 +326,19 @@
     }
 
     function updateWarpValue(id, isInput = false) {
-  const slider = document.getElementById(id);
-  const input = document.getElementById(id + "Input");
-  if (isInput) {
-    slider.value = input.value;
-  } else {
-    input.value = slider.value;
-  }
+      const slider = document.getElementById(id);
+      const input = document.getElementById(id + "Input");
+      if (isInput) {
+        slider.value = input.value;
+      } else {
+        input.value = slider.value;
+      }
 
-  debouncedUpdate(); // Re-render with new values
+      debouncedUpdate(); // Re-render with new values
 
-}
+    }
 
-const debouncedUpdate = debounce(updatePerforation);
+    const debouncedUpdate = debounce(updatePerforation);
   </script>
 </body>
 
