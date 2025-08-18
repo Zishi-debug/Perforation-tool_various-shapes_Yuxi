@@ -41,7 +41,7 @@
         <div class="controls">
 
           <!-- Slider UI -->
-          <label for="size1">Dot radius1:</label>
+          <label for="size1">Dot1 Radius:</label>
           <img id="shapeIcon-size1" src="Icons/rectangle-05.png" alt="Toggle Shape"
             onclick="toggleShapeForSize('size1')" class="shape-icon active" />
 
@@ -50,8 +50,7 @@
           <br />
 
 
-
-          <label for="size2">Dot radius2:</label>
+          <label for="size2">Dot2 Radius:</label>
           <img id="shapeIcon-size2" src="Icons/rectangle-05.png" alt="Toggle Shape"
             onclick="toggleShapeForSize('size2')" class="shape-icon active" />
           <input type="number" id="size2" min="0" max="5" step="0.01" value="0.5" />
@@ -60,7 +59,7 @@
 
 
 
-          <label for="size3">Dot radius3:</label>
+          <label for="size3">Dot3 Radius:</label>
           <img id="shapeIcon-size3" src="Icons/rectangle-05.png" alt="Toggle Shape"
             onclick="toggleShapeForSize('size3')" class="shape-icon active" />
           <input type="number" id="size3" min="0" max="5" step="0.01" value="0.3" />
@@ -68,7 +67,7 @@
           <br />
 
 
-          <label for="size4">Dot radius4:</label>
+          <label for="size4">Dot4 Radius:</label>
           <img id="shapeIcon-size4" src="Icons/rectangle-05.png" alt="Toggle Shape"
             onclick="toggleShapeForSize('size4')" class="shape-icon active" />
           <input type="number" id="size4" min="0" max="5" step="0.01" value="0.1" />
@@ -99,23 +98,25 @@
             <label for="blackPreviewToggle" style="margin: 0; cursor: pointer;">Black Dot </label>
             <input type="checkbox" id="blackPreviewToggle" onchange="updatePerforation()">
           </div>
-
           <br />
-        
-        <label for="colorRangeB">Color Range Black:</label>
-        <input type="range" id="colorRangeB" min="0" max="255" value="0" oninput="updateColorRange('colorRangeB')" />
-        <input type="number" id="colorRangeBInput" min="0" max="255" value="0"
-          oninput="updateColorRange('colorRangeB', true)" />
-        <br />
-
-        <label for="colorRangeW">Color Range White:</label>
-        <input type="range" id="colorRangeW" min="0" max="255" value="208" oninput="updateColorRange('colorRangeW')" />
-        <input type="number" id="colorRangeWInput" min="0" max="255" value="208"
-          oninput="updateColorRange('colorRangeW', true)" />
-        <br />
-      </div>
+        </div>
 
         <div class="controls">
+          <label for="colorRangeB">Color Range Black:</label>
+          <input type="range" id="colorRangeB" min="0" max="255" value="0" oninput="updateColorRange('colorRangeB')" />
+          <input type="number" id="colorRangeBInput" min="0" max="255" value="0"
+            oninput="updateColorRange('colorRangeB', true)" />
+          <br />
+
+          <label for="colorRangeW">Color Range White:</label>
+          <input type="range" id="colorRangeW" min="0" max="255" value="208"
+            oninput="updateColorRange('colorRangeW')" />
+          <input type="number" id="colorRangeWInput" min="0" max="255" value="208"
+            oninput="updateColorRange('colorRangeW', true)" />
+          <br />
+
+
+
           <p id="canvasSize">________________ Edge Blend _________________</p>
           <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
             <label for="enableWarp" style="margin: 0; cursor: pointer;">Edge Blend </label>
@@ -141,42 +142,44 @@
           <br />
 
           <br />
-
-          <p id="canvasSize">________________ Rotation _________________</p>
-          <label for="brightnessInfluence">Brightness Influence:</label>
-          <input type="range" id="brightnessInfluence" min="0" max="5" step="0.1" value="1" />
-          <span id="brightnessInfluenceValue">1</span>
-          <br />
-
-          <label for="noiseScale">Noise Scale:</label>
-          <input type="range" id="noiseScale" min="0.00" max="0.1" step="0.001" value="0.01" />
-          <span id="noiseScaleValue">0.01</span>
-          <br />
-
-          <label for="generalRotation">General Rotation:</label>
-          <input type="range" id="generalRotation" min="0" max="360" step="1" value="50" />
-          <span id="generalRotationValue">50</span>
-          <br />
-
-          <label for="randomValue">Randomnise each Position:</label>
-          <input type="number" id="randomValue" min="0" max="1" step="0.01" value="0" />
-          <span id="randomValueValue">0</span>
-
-          <br />
-
-          <div class="settings-buttons">
-            <button class="btn" onclick="saveSVG()">🖨️ Save SVG</button>
-            <button class="btn" onclick="saveSettings()">💾 Save Settings</button>
-
-            <button class="btn" onclick="document.getElementById('loadSettingsFile').click()">
-              📂 Load Settings
-            </button>
-
-
-
-            <input type="file" id="loadSettingsFile" onchange="handleFileLoad(event)" style="display: none;" />
-          </div>
         </div>
+          <div class="controls">
+            <p id="canvasSize">________________ Rotation _________________</p>
+            <label for="brightnessInfluence">Brightness Influence:</label>
+            <input type="range" id="brightnessInfluence" min="0" max="5" step="0.1" value="1" />
+            <span id="brightnessInfluenceValue">1</span>
+            <br />
+
+            <label for="noiseScale">Noise Scale:</label>
+            <input type="range" id="noiseScale" min="0.00" max="0.1" step="0.001" value="0.01" />
+            <span id="noiseScaleValue">0.01</span>
+            <br />
+
+            <label for="generalRotation">General Rotation:</label>
+            <input type="range" id="generalRotation" min="0" max="360" step="1" value="50" />
+            <span id="generalRotationValue">50</span>
+            <br />
+
+            <label for="randomValue">Randomnise each Position:</label>
+            <input type="number" id="randomValue" min="0" max="1" step="0.01" value="0" />
+            <span id="randomValueValue">0</span>
+
+            <br />
+
+            <div class="settings-buttons">
+              <button class="btn" onclick="saveSVG()">🖨️ Save SVG</button>
+              <button class="btn" onclick="saveSettings()">💾 Save Settings</button>
+
+              <button class="btn" onclick="document.getElementById('loadSettingsFile').click()">
+                📂 Load Settings
+              </button>
+
+
+
+              <input type="file" id="loadSettingsFile" onchange="handleFileLoad(event)" style="display: none;" />
+            </div>
+          </div>
+        
 
 
       </div>

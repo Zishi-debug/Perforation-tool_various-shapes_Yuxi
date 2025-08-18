@@ -159,7 +159,7 @@ input[type="file"] {
     "header header"
     "menu content"
     "footer footer";
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
   gap: 5px;
   
   padding: 5px;
