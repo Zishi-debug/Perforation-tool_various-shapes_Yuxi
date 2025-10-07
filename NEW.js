@@ -384,7 +384,7 @@ function drawLayer(svgElement, rectArray, layerName) {
       shape = document.createElementNS("http://www.w3.org/2000/svg", "path");
       shape.setAttribute("d", customShapes.buthole1);
 
-      let scaleFactor = (r.size * 2) / 6.5; // width of original buthole1 path is ~6.5
+      let scaleFactor = (r.size * 2) / 8.5; // width of original buthole1 path is ~6.5
       shape.setAttribute(
         "transform",
         `translate(${r.x},${r.y}) scale(${scaleFactor}) rotate(${r.angle}) translate(-4.63,-4.63)`
