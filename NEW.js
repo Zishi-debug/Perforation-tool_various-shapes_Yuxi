@@ -10,6 +10,8 @@ Any questions, please contact Yuxi Chen: yuxi.chen@rolls-roycemotorcars.com
 //___________________________________ Parameters you can play with __________________________________________
 
 let PixelToMilimeterRatio = 2.835; // Please check pixel-to-millimeter ratio in your Illustrator file
+let globalSeed = Math.floor(Math.random() * 1e9);
+
 let img;
 
 let dis1 = 2.69; // Distance for size1
@@ -29,14 +31,20 @@ let size4 = 0.1; // Grey dots, change the dot radius
 let colorRangeB = 0; // Black threshold for brightness mapping
 let colorRangeW = 208; // White threshold for brightness mapping
 
-let warpIntensity = 8;
-let warpScale = 0.01;
-
 let originalBrightnessMap = [];  // Store original, untouched brightness data
 
 let randomValue = 0; // Switch from 0 to 0+ to randomize dot positions
 let generalRotation = 50;
 let Dots = { size1: [], size2: [], size3: [], size4: [] };
+
+let enableWarp = false; // default OFF
+let warpIntensity = 8;
+let warpScale = 0.01;
+
+let enableMask = false; // default OFF
+let maskThreshold = 0.5;     // 0..1  (0 keeps almost all dots, 1 removes almost all)
+let maskNoiseScale = 0.02;  // noise frequency for edge blending
+let maskMap = [];
 
 
 let shapeOptions = ["rect", "ellipse", "rhombus", "circle", "buthole1", "buthole2"];
@@ -59,11 +67,81 @@ let shapeBySize = {
 let currentShapeIndex = 0;
 let currentShape = shapeOptions[currentShapeIndex].type;
 
-const customShapes = {
-  buthole1: "M7.55,3.35H1.72c-.73,0-1.33.51-1.33,1.13v.31c0,.62.6,1.13,1.33,1.13h5.83c.74,0,1.34-.51,1.34-1.13v-.31c0-.62-.6-1.13-1.34-1.13Z",
-  buthole2: "M3.49,1.52h2.25c1.72,0,3.12,1.4,3.12,3.12v0c0,1.72-1.4,3.12-3.12,3.12h-2.25c-1.72,0-3.12-1.4-3.12-3.12v0c0-1.72,1.4-3.12,3.12-3.12Z"
-};
 
+
+// ___________________________________ Warp cache helpers ___________________________________
+let _warpCacheKey = null;
+let _warpedBrightnessMap = null;
+
+function warpKey({ enableWarp, warpIntensity, warpScale, img }) {
+  return `${enableWarp}|${warpIntensity}|${warpScale}|${img?.width ?? 0}x${img?.height ?? 0}`;
+}
+
+function invalidateWarpCache() {
+  _warpCacheKey = null;
+}
+
+function updateWarpIfNeeded({ enableWarp, warpIntensity, warpScale, img }) {
+  if (!enableWarp) {
+    brightnessMap = originalBrightnessMap;
+    _warpCacheKey = null;
+    _warpedBrightnessMap = null;
+    return;
+  }
+  const key = warpKey({ enableWarp, warpIntensity, warpScale, img });
+
+  if (key === _warpCacheKey && _warpedBrightnessMap) {
+    brightnessMap = _warpedBrightnessMap;
+    return;
+  }
+
+  warpBrightnessMap(warpIntensity, warpScale);
+
+  _warpCacheKey = key;
+  _warpedBrightnessMap = brightnessMap;
+}
+
+
+// ___________________________________ Mask cache helpers ___________________________________
+let _maskCacheKey = null;
+
+function maskKey({ maskThreshold, maskNoiseScale, colorRangeB, colorRangeW, img }) {
+  // include image dimensions so a new image invalidates automatically
+  return `${maskThreshold}|${maskNoiseScale}|${colorRangeB}|${colorRangeW}|${img?.width ?? 0}x${img?.height ?? 0}`;
+}
+
+function invalidateMaskCache() {
+  _maskCacheKey = null;
+}
+
+function updateMaskIfNeeded({ enableMask, maskThreshold, maskNoiseScale, colorRangeB, colorRangeW, img }) {
+  if (!enableMask) {
+    maskMap = null;
+    _maskCacheKey = null;
+    return;
+  }
+
+  const key = maskKey({ maskThreshold, maskNoiseScale, colorRangeB, colorRangeW, img });
+  if (key === _maskCacheKey) return;
+
+  computeMaskMapSimple(); // heavy
+  _maskCacheKey = key;
+}
+
+function num(id, fallback = 0) {
+  const el = document.getElementById(id);
+  const v = el ? parseFloat(el.value) : fallback;
+  return Number.isFinite(v) ? v : fallback;
+}
+
+function bool(id, fallback = false) {
+  const el = document.getElementById(id);
+  return el ? !!el.checked : fallback;
+}
+
+
+
+//___________________________________ Debounce __________________________________________
 
 function debounce(func, wait = 150) {
   let timeout;
@@ -91,6 +169,7 @@ function preload() {
     resizeCanvasToImage();
   }); // Input your own image
 }
+//___________________________________ Compute Brightness__________________________________________
 function computeBrightnessMap() {
   img.loadPixels();
   originalBrightnessMap = [];
@@ -111,28 +190,131 @@ function computeBrightnessMap() {
   brightnessMap = originalBrightnessMap;  // Also assign to main map initially
 }
 
+
+//___________________________________ Warp/Edge blend __________________________________________
+
+const STEP = 4; // 2 or 4 are good. 4 = much faster.
+
 function warpBrightnessMap(intensity = 10, scale = 0.01) {
   if (!originalBrightnessMap || originalBrightnessMap.length === 0) return;
 
+  const step = STEP; // 4 = 16x fewer pixels processed
   let warped = [];
 
+  // vector noise offsets (independent fields)
+  const ox = 10000;
+  const oy = 20000;
+
   for (let y = 0; y < img.height; y++) {
-    let row = [];
+    let row = new Array(img.width);
+
     for (let x = 0; x < img.width; x++) {
-      let angle = noise(x * scale, y * scale) * TWO_PI;
-      let dx = cos(angle) * intensity;
-      let dy = sin(angle) * intensity;
+      // Only compute warp at grid points, reuse for the block
+      if (x % step !== 0 || y % step !== 0) continue;
 
-      let nx = int(constrain(x + dx, 0, img.width - 1));
-      let ny = int(constrain(y + dy, 0, img.height - 1));
+      let vx = (noise(x * scale + ox, y * scale + ox) - 0.5) * 2;
+      let vy = (noise(x * scale + oy, y * scale + oy) - 0.5) * 2;
 
-      row.push(originalBrightnessMap[ny][nx]);  // Use unwarped original data
+      const len = Math.hypot(vx, vy) || 1;
+      vx /= len; vy /= len;
+
+      const dx = vx * intensity;
+      const dy = vy * intensity;
+
+      const nx = int(constrain(x + dx, 0, img.width - 1));
+      const ny = int(constrain(y + dy, 0, img.height - 1));
+      const sample = originalBrightnessMap[ny][nx];
+
+      // Fill the whole block with the same warped sample (cheap)
+      for (let by = 0; by < step; by++) {
+        const yy = y + by;
+        if (yy >= img.height) break;
+        if (!warped[yy]) warped[yy] = new Array(img.width);
+        for (let bx = 0; bx < step; bx++) {
+          const xx = x + bx;
+          if (xx >= img.width) break;
+          warped[yy][xx] = sample;
+        }
+      }
     }
-    warped.push(row);
+
+    // ensure row exists (for safety)
+    if (!warped[y]) warped[y] = row;
   }
 
   brightnessMap = warped;
 }
+
+
+
+//___________________________________ Mask map __________________________________________
+function smoothstep(edge0, edge1, x) {
+  let t = constrain((x - edge0) / (edge1 - edge0), 0, 1);
+  return t * t * (3 - 2 * t);
+}
+
+function computeMaskMapSimple() {
+  if (!originalBrightnessMap || originalBrightnessMap.length === 0) return;
+
+  // Hard clamp endpoints
+  if (maskThreshold <= 0.0001) {
+    maskMap = Array.from({ length: img.height }, () => Array(img.width).fill(0));
+    return;
+  }
+  if (maskThreshold >= 0.9999) {
+    maskMap = Array.from({ length: img.height }, () => Array(img.width).fill(1));
+    return;
+  }
+
+  const step = STEP;
+
+  // Prep output (full resolution, but we fill it in blocks)
+  maskMap = Array.from({ length: img.height }, () => new Array(img.width));
+
+  // Levels window that can invert when B > W
+  const invLevels = colorRangeB > colorRangeW;
+  const low = Math.min(colorRangeB, colorRangeW);
+  const high = Math.max(colorRangeB, colorRangeW);
+  const range = Math.max(1e-6, high - low);
+
+  // Convert your “transition in brightness units” into 0..1 levels space
+  const transitionPx = 80;
+  const transition01 = constrain(transitionPx / range, 0.001, 0.5);
+
+  const strength = 0.6;
+  const noiseGate = constrain(maskThreshold, 0, 1);
+
+  for (let y = 0; y < img.height; y += step) {
+    for (let x = 0; x < img.width; x += step) {
+      // sample from the top-left of the block
+      const brRaw = originalBrightnessMap[y][x];
+
+      // 1) Levels normalize 0..1
+      const brClamped = constrain(brRaw, low, high);
+      let t01 = (brClamped - low) / range;
+      if (invLevels) t01 = 1 - t01;
+
+      // 2) Base mask (non-inverted)
+      const base = smoothstep(maskThreshold - transition01, maskThreshold + transition01, t01);
+
+      // 3) Subtract noise, then invert-after-subtract
+      const n = noise(x * maskNoiseScale, y * maskNoiseScale); // 0..1
+      let m = constrain(base - n * strength * noiseGate, 0, 1);
+      m = 1 - m;
+
+      // 4) Fill the whole block with this m
+      for (let yy = y; yy < y + step && yy < img.height; yy++) {
+        const row = maskMap[yy];
+        for (let xx = x; xx < x + step && xx < img.width; xx++) {
+          row[xx] = m;
+        }
+      }
+    }
+  }
+}
+
+
+
 //___________________________________ Canvas Setup __________________________________________
 
 function setup() {
@@ -141,7 +323,8 @@ function setup() {
   noLoop();
   img.loadPixels();
   computeBrightnessMap();
-  warpBrightnessMap(warpIntensity, warpScale);
+  //computeMaskMapSimple();
+  //warpBrightnessMap(warpIntensity, warpScale);
   setupPerforation();
 }
 
@@ -149,46 +332,48 @@ function setup() {
 
 function setupPerforation() {
 
-  let diagonal = Math.sqrt(width * width + height * height);
-  
+  let diagonal = sqrt(width * width + height * height);
+
   Dots = { size1: [], size2: [], size3: [], size4: [] }; // Clear previous Dots
+
 
   size1 = size1 * PixelToMilimeterRatio; // Blue dots, change the dot radius
   size2 = size2 * PixelToMilimeterRatio; // Green dots, change the dot radius
   size3 = size3 * PixelToMilimeterRatio; // Red dots, change the dot radius
   size4 = size4 * PixelToMilimeterRatio; // Grey dots, change the dot radius
 
-  let cos45 = Math.cos(PI / 4);
-  let sin45 = Math.sin(PI / 4);
+  let cos45 = cos(PI / 4);
+  let sin45 = sin(PI / 4);
   let centerX = width / 2;
   let centerY = height / 2;
 
   //draw Dot 1
- new DotLayer({
-  sizeKey: "size1",
-  radius: size1,
-  resolution: dis1,
-  color: [0, 0, 255],
-  index: 1
-}).generate({
-  PixelToMilimeterRatio,
-  brightnessMap,
-  Dots,
-  width,
-  height,
-  randomValue,
-  colorRangeB,
-  colorRangeW,
-  brightnessInfluence,
-  noiseScale,
-  generalRotation,
-  centerX,
-  centerY,
-  diagonal,
-  cos45,
-  sin45,
-  useBlackPreview: window.useBlackPreview
-});
+  new DotLayer({
+    sizeKey: "size1",
+    radius: size1,
+    resolution: dis1,
+    color: [0, 0, 255],
+    index: 1
+  }).generate({
+    PixelToMilimeterRatio,
+    brightnessMap,
+    maskMap,
+    Dots,
+    width,
+    height,
+    randomValue,
+    colorRangeB,
+    colorRangeW,
+    brightnessInfluence,
+    noiseScale,
+    generalRotation,
+    centerX,
+    centerY,
+    diagonal,
+    cos45,
+    sin45,
+    useBlackPreview: window.useBlackPreview
+  });
 
   //draw Dot 2
   new DotLayer({
@@ -201,6 +386,7 @@ function setupPerforation() {
     PixelToMilimeterRatio,
     brightnessMap,
     Dots,
+    maskMap,
     width,
     height,
     randomValue,
@@ -222,12 +408,13 @@ function setupPerforation() {
     sizeKey: "size3",
     radius: size3,
     resolution: dis3,
-    color: [255,0, 0],
+    color: [255, 0, 0],
     index: 3
   }).generate({
     PixelToMilimeterRatio,
     brightnessMap,
     Dots,
+    maskMap,
     width,
     height,
     randomValue,
@@ -254,6 +441,7 @@ function setupPerforation() {
     PixelToMilimeterRatio,
     brightnessMap,
     Dots,
+    maskMap,
     width,
     height,
     randomValue,
@@ -274,48 +462,65 @@ function setupPerforation() {
 //___________________________________ Update Perforation When Sliders Change __________________________________________
 
 function updatePerforation() {
-  // Get and clamp input values
-  size1 = parseFloat(document.getElementById("size1").value);
-  size2 = parseFloat(document.getElementById("size2").value);
-  size3 = parseFloat(document.getElementById("size3").value);
-  size4 = parseFloat(document.getElementById("size4").value);
+  
+  // --- Read UI ---
+  size1 = num("size1");
+  size2 = num("size2");
+  size3 = num("size3");
+  size4 = num("size4");
 
-  colorRangeB = parseFloat(document.getElementById("colorRangeB").value);
-  colorRangeW = parseFloat(document.getElementById("colorRangeW").value);
+  colorRangeB = num("colorRangeB");
+  colorRangeW = num("colorRangeW");
 
-  // Clamp dot distances to a minimum of 0.5mm
-  dis1 = Math.max(parseFloat(document.getElementById("dis1").value), 0.50);
-  dis2 = Math.max(parseFloat(document.getElementById("dis2").value), 0.50);
-  dis3 = Math.max(parseFloat(document.getElementById("dis3").value), 0.50);
-  dis4 = Math.max(parseFloat(document.getElementById("dis4").value), 0.50);
+  dis1 = max(num("dis1"), 0.50);
+  dis2 = max(num("dis2"), 0.50);
+  dis3 = max(num("dis3"), 0.50);
+  dis4 = max(num("dis4"), 0.50);
 
-  let useBlackPreview = document.getElementById("blackPreviewToggle").checked;
-  window.useBlackPreview = useBlackPreview; // Store globally
+  window.useBlackPreview = bool("blackPreviewToggle", false);
 
-  brightnessInfluence = parseFloat(document.getElementById("brightnessInfluence").value);
-  noiseScale = parseFloat(document.getElementById("noiseScale").value);
-  generalRotation = parseFloat(document.getElementById("generalRotation").value);
-  randomValue = parseFloat(document.getElementById("randomValue").value);
+  brightnessInfluence = num("brightnessInfluence");
+  noiseScale = num("noiseScale");
+  generalRotation = num("generalRotation");
+  randomValue = num("randomValue");
 
-   // Warp toggle and parameters
-   const enableWarp = document.getElementById("enableWarp")?.checked || false;
-   const warpIntensity = parseFloat(document.getElementById("warpIntensity")?.value || 0);
-   const warpScale = parseFloat(document.getElementById("warpScale")?.value || 100);
-   window.enableWarp = enableWarp;
- 
-   // Generate brightness map (warped or original)
-   if (enableWarp) {
-     warpBrightnessMap(warpIntensity, warpScale);
-   } else {
-     computeBrightnessMap();
-   }
+  // Warp
+  const enableWarp = bool("enableWarp", false);
+  const warpIntensityUI = num("warpIntensity");
+  const warpScaleUI = num("warpScale");
+  window.enableWarp = enableWarp;
 
-  // Recalculate and draw
+  // Mask
+  const enableMask = bool("enableMask", false);
+  maskThreshold = num("maskThreshold", 0.5);
+  maskNoiseScale = num("maskNoiseScale", 0.02);
+  window.enableMask = enableMask;
+
+  // --- Build maps ---
+  //computeBrightnessMap(); // updates originalBrightnessMap
+
+  updateMaskIfNeeded({
+    enableMask,
+    maskThreshold,
+    maskNoiseScale,
+    colorRangeB,
+    colorRangeW,
+    img
+  });
+  randomSeed(globalSeed);
+  noiseSeed(globalSeed);
+  
+  updateWarpIfNeeded({
+    enableWarp,
+    warpIntensity: warpIntensityUI,
+    warpScale: warpScaleUI,
+    img
+  });
+
+  //console.log("enableWarp:", enableWarp, "warpIntensity:", warpIntensityUI, "warpScale:", warpScaleUI);
+
+  // --- Generate dots + export ---
   setupPerforation();
-
-  // if (parseFloat(dis1 < 0.50)) {
-  //   alert("Minimum dot spacing is 0.5mm to avoid crashes.");
-  // }
 }
 
 
@@ -337,23 +542,31 @@ function exportSVGWithLayers() {
 
 // console.log("Selected shape:", shapeBySize.size1); // for debugging
 
+const customShapes = {
+  buthole1: "M7.55,3.35H1.72c-.73,0-1.33.51-1.33,1.13v.31c0,.62.6,1.13,1.33,1.13h5.83c.74,0,1.34-.51,1.34-1.13v-.31c0-.62-.6-1.13-1.34-1.13Z",
+  buthole2: "M3.49,1.52h2.25c1.72,0,3.12,1.4,3.12,3.12v0c0,1.72-1.4,3.12-3.12,3.12h-2.25c-1.72,0-3.12-1.4-3.12-3.12v0c0-1.72,1.4-3.12,3.12-3.12Z"
+};
+
 function drawLayer(svgElement, rectArray, layerName) {
-  let layerGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  const NS = "http://www.w3.org/2000/svg";
+
+  const layerGroup = document.createElementNS(NS, "g");
   layerGroup.setAttribute("id", layerName);
 
-  let sizeKey = layerName.split("_")[1].toLowerCase(); // e.g., size1
-  let shapeType = shapeBySize[sizeKey];
+  const sizeKey = layerName.split("_")[1].toLowerCase();
+  const shapeType = shapeBySize[sizeKey];
 
-  // 🔍 Debugging log:
-  // console.log(`▶ Drawing layer: ${layerName}`);
-  // console.log(`   Shape type: ${shapeType}`);
-  // console.log(`   Number of dots: ${rectArray.length}`);
+  // If black preview is ON, avoid per-dot fill updates
+  const blackPreview = !!window.useBlackPreview;
+  if (blackPreview) layerGroup.setAttribute("fill", "black");
+
+  const frag = document.createDocumentFragment();
 
   for (let r of rectArray) {
     let shape;
 
     if (shapeType === "ellipse") {
-      shape = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
+      shape = document.createElementNS(NS, "ellipse");
       shape.setAttribute("cx", r.x);
       shape.setAttribute("cy", r.y);
       shape.setAttribute("rx", r.size);
@@ -361,50 +574,44 @@ function drawLayer(svgElement, rectArray, layerName) {
       shape.setAttribute("transform", `rotate(${r.angle} ${r.x} ${r.y})`);
 
     } else if (shapeType === "rhombus") {
-      shape = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      let halfW = r.size;
-      let halfH = r.size / 2.5;
-      let points = [
-        [r.x, r.y - halfH],
-        [r.x + halfW, r.y],
-        [r.x, r.y + halfH],
-        [r.x - halfW, r.y]
-      ].map(p => p.join(",")).join(" ");
-      shape.setAttribute("points", points);
+      shape = document.createElementNS(NS, "polygon");
+      const halfW = r.size;
+      const halfH = r.size / 2.5;
+      shape.setAttribute(
+        "points",
+        `${r.x},${r.y - halfH} ${r.x + halfW},${r.y} ${r.x},${r.y + halfH} ${r.x - halfW},${r.y}`
+      );
       shape.setAttribute("transform", `rotate(${r.angle} ${r.x} ${r.y})`);
 
     } else if (shapeType === "circle") {
-      shape = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      shape = document.createElementNS(NS, "circle");
       shape.setAttribute("cx", r.x);
       shape.setAttribute("cy", r.y);
       shape.setAttribute("r", r.size);
-      shape.setAttribute("transform", `rotate(${r.angle} ${r.x} ${r.y})`);
+   
 
     } else if (shapeType === "buthole1") {
-      shape = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      shape = document.createElementNS(NS, "path");
       shape.setAttribute("d", customShapes.buthole1);
-
-      let scaleFactor = (r.size * 2) / 8.5; // width of original buthole1 path is ~6.5
+      const scaleFactor = (r.size * 2) / 8.5;
       shape.setAttribute(
         "transform",
         `translate(${r.x},${r.y}) scale(${scaleFactor}) rotate(${r.angle}) translate(-4.63,-4.63)`
       );
 
     } else if (shapeType === "buthole2") {
-      shape = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      shape = document.createElementNS(NS, "path");
       shape.setAttribute("d", customShapes.buthole2);
-
-      let scaleFactor = (r.size * 2) / 8.5; // original width of rect
+      const scaleFactor = (r.size * 2) / 8.5;
       shape.setAttribute(
         "transform",
         `translate(${r.x},${r.y}) scale(${scaleFactor}) rotate(${r.angle}) translate(-4.62,-4.64)`
       );
 
-    }else {
-      // Default: rectangle
-      shape = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-      let rectWidth = r.size * 2;
-      let rectHeight = r.size;
+    } else {
+      shape = document.createElementNS(NS, "rect");
+      const rectWidth = r.size * 2;
+      const rectHeight = r.size;
       shape.setAttribute("x", r.x - rectWidth / 2);
       shape.setAttribute("y", r.y - rectHeight / 2);
       shape.setAttribute("width", rectWidth);
@@ -412,18 +619,18 @@ function drawLayer(svgElement, rectArray, layerName) {
       shape.setAttribute("transform", `rotate(${r.angle} ${r.x} ${r.y})`);
     }
 
-    // Set fill color
-    if (window.useBlackPreview) {
-      shape.setAttribute("fill", "black");
-    } else {
+    // Only set per-dot fill when NOT in black preview
+    if (!blackPreview) {
       shape.setAttribute("fill", `rgb(${r.color[0]},${r.color[1]},${r.color[2]})`);
     }
 
-    layerGroup.appendChild(shape);
+    frag.appendChild(shape);
   }
 
+  layerGroup.appendChild(frag);
   svgElement.appendChild(layerGroup);
 }
+
 
 function setShapeForSize(sizeKey, shapeType) {
   shapeBySize[sizeKey] = shapeType;
@@ -443,12 +650,14 @@ function getRotationAngle(x, y) {
 
 function loadNewImage(imageSrc) {
   img = loadImage(imageSrc, function () {
+    invalidateMaskCache();
+    invalidateWarpCache();
     resizeCanvasToImage();
     computeBrightnessMap();
-    //warpBrightnessMap(warpIntensity, warpScale);
-    updatePerforation(); // Refresh with the new image
+    updatePerforation();
   });
 }
+
 
 function resizeCanvasToImage() {
   if (img) {
@@ -470,22 +679,46 @@ function resizeCanvasToImage() {
 // ___________________________ Save / Load Settings _______________________________
 
 function saveSettings() {
+  const getVal = (id) => document.getElementById(id)?.value;
+
   const settings = {
-    size1: document.getElementById("size1").value,
-    size2: document.getElementById("size2").value,
-    size3: document.getElementById("size3").value,
-    size4: document.getElementById("size4").value,
-    colorRangeB: document.getElementById("colorRangeB").value,
-    colorRangeW: document.getElementById("colorRangeW").value,
-    dis1: document.getElementById("dis1").value,
-    dis2: document.getElementById("dis2").value,
-    dis3: document.getElementById("dis3").value,
-    dis4: document.getElementById("dis3").value,
-    brightnessInfluence: document.getElementById("brightnessInfluence").value,
-    noiseScale: document.getElementById("noiseScale").value,
-    generalRotation: document.getElementById("generalRotation").value,
-    randomValue: document.getElementById("randomValue").value,
-    shapeBySize: shapeBySize
+    // Dots
+    size1: getVal("size1"),
+    size2: getVal("size2"),
+    size3: getVal("size3"),
+    size4: getVal("size4"),
+
+    // Distances
+    dis1: getVal("dis1"),
+    dis2: getVal("dis2"),
+    dis3: getVal("dis3"),
+    dis4: getVal("dis4"),
+
+    // Color range
+    colorRangeB: getVal("colorRangeB"),
+    colorRangeW: getVal("colorRangeW"),
+
+    // Rotation / randomness
+    brightnessInfluence: getVal("brightnessInfluence"),
+    noiseScale: getVal("noiseScale"),
+    generalRotation: getVal("generalRotation"),
+    randomValue: getVal("randomValue"),
+
+    // Preview toggles
+    blackPreviewToggle: document.getElementById("blackPreviewToggle")?.checked ?? false,
+
+    // Warp (Edge Blend)
+    enableWarp: document.getElementById("enableWarp")?.checked ?? false,
+    warpIntensity: getVal("warpIntensity"),
+    warpScale: getVal("warpScale"),
+
+    // Mask
+    enableMask: document.getElementById("enableMask")?.checked ?? false,
+    maskThreshold: getVal("maskThreshold"),
+    maskNoiseScale: getVal("maskNoiseScale"),
+
+    // Shapes
+    shapeBySize
   };
 
   const blob = new Blob([JSON.stringify(settings, null, 2)], { type: "application/json" });
@@ -497,23 +730,77 @@ function saveSettings() {
   URL.revokeObjectURL(url);
 }
 
+
 function loadSettings(settings) {
-  document.getElementById("size1").value = settings.size1;
-  document.getElementById("size2").value = settings.size2;
-  document.getElementById("size3").value = settings.size3;
-  document.getElementById("size4").value = settings.size4;
-  document.getElementById("colorRangeB").value = settings.colorRangeB;
-  document.getElementById("colorRangeW").value = settings.colorRangeW;
-  document.getElementById("dis").value = settings.dis;
-  document.getElementById("brightnessInfluence").value = settings.brightnessInfluence;
-  document.getElementById("noiseScale").value = settings.noiseScale;
-  document.getElementById("generalRotation").value = settings.generalRotation;
-  document.getElementById("randomValue").value = settings.randomValue;
+  const setVal = (id, v) => {
+    const el = document.getElementById(id);
+    if (el != null && v != null) el.value = v;
+  };
 
-  shapeBySize = settings.shapeBySize;
+  const setChecked = (id, v) => {
+    const el = document.getElementById(id);
+    if (el != null && typeof v === "boolean") el.checked = v;
+  };
 
-  updatePerforation(); // Refresh everything with loaded settings
+  // Dots
+  setVal("size1", settings.size1);
+  setVal("size2", settings.size2);
+  setVal("size3", settings.size3);
+  setVal("size4", settings.size4);
+
+  // Distances
+  setVal("dis1", settings.dis1);
+  setVal("dis2", settings.dis2);
+  setVal("dis3", settings.dis3);
+  setVal("dis4", settings.dis4);
+
+  // Color range
+  setVal("colorRangeB", settings.colorRangeB);
+  setVal("colorRangeW", settings.colorRangeW);
+
+  // Rotation / randomness
+  setVal("brightnessInfluence", settings.brightnessInfluence);
+  setVal("noiseScale", settings.noiseScale);
+  setVal("generalRotation", settings.generalRotation);
+  setVal("randomValue", settings.randomValue);
+
+  // Preview toggles
+  setChecked("blackPreviewToggle", settings.blackPreviewToggle);
+
+  // Warp
+  setChecked("enableWarp", settings.enableWarp);
+  setVal("warpIntensity", settings.warpIntensity);
+  setVal("warpScale", settings.warpScale);
+
+  // Mask
+  setChecked("enableMask", settings.enableMask);
+  setVal("maskThreshold", settings.maskThreshold);
+  setVal("maskNoiseScale", settings.maskNoiseScale);
+
+  // Shapes (backwards compatible)
+  if (settings.shapeBySize && typeof settings.shapeBySize === "object") {
+    shapeBySize = settings.shapeBySize;
+
+    // update icons if they exist
+    ["size1", "size2", "size3", "size4"].forEach((k) => {
+      const icon = document.getElementById(`shapeIcon-${k}`);
+      if (icon && shapeBySize[k] && shapeIcons[shapeBySize[k]]) {
+        icon.src = shapeIcons[shapeBySize[k]];
+      }
+    });
+  }
+
+  // Sync the paired number inputs (if you use them)
+  // (Optional: only if you want the *Input fields* to update immediately)
+  ["colorRangeB", "colorRangeW", "warpIntensity", "warpScale", "maskThreshold", "maskNoiseScale"].forEach((id) => {
+    const inp = document.getElementById(id + "Input");
+    const sld = document.getElementById(id);
+    if (inp && sld) inp.value = sld.value;
+  });
+
+  updatePerforation(); // refresh everything
 }
+
 
 function handleFileLoad(event) {
   const file = event.target.files[0];
@@ -529,7 +816,6 @@ function handleFileLoad(event) {
 //___________________________________ Key Press to Save SVG __________________________________________
 
 function saveSVG() {
-  //updatePerforation();           // Refresh all values and regenerate dot data
-  //exportSVGWithLayers();
+
   save("Perforation_Tool.svg");
 }
