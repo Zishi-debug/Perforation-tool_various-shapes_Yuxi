@@ -42,6 +42,11 @@
         <div class="controls">
 
           <!-- Slider UI -->
+          <label>Dot Layout
+<select id="layoutMode">
+  <option value="square">Square</option>
+  <option value="equilateral">Equilateral</option>
+</select></label>
           <label for="size1">Dot1 Radius:</label>
           <img id="shapeIcon-size1" src="Icons/rectangle-05.png" alt="Toggle Shape"
             onclick="toggleShapeForSize('size1')" class="shape-icon active" />
@@ -220,6 +225,11 @@
 
   <script>
     // When sliders change, update values in the span and trigger update in p5.js
+
+    document.getElementById("layoutMode").addEventListener("change", function () {
+      
+      updatePerforation();
+    });
 
     document.getElementById("size1").addEventListener("input", function () {
 

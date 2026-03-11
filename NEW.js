@@ -14,6 +14,8 @@ let globalSeed = Math.floor(Math.random() * 1e9);
 
 let img;
 
+let gridLayout = "square"; // "square" or "equilateral"
+
 let dis1 = 2.69; // Distance for size1
 let dis2 = 2.69; // Distance for size2
 let dis3 = 2.69; // Distance for size3
@@ -356,6 +358,7 @@ function setupPerforation() {
     index: 1
   }).generate({
     PixelToMilimeterRatio,
+    gridLayout,
     brightnessMap,
     maskMap,
     Dots,
@@ -384,6 +387,7 @@ function setupPerforation() {
     index: 2
   }).generate({
     PixelToMilimeterRatio,
+    gridLayout,
     brightnessMap,
     Dots,
     maskMap,
@@ -412,6 +416,7 @@ function setupPerforation() {
     index: 3
   }).generate({
     PixelToMilimeterRatio,
+    gridLayout,
     brightnessMap,
     Dots,
     maskMap,
@@ -439,6 +444,7 @@ function setupPerforation() {
     index: 4
   }).generate({
     PixelToMilimeterRatio,
+    gridLayout,
     brightnessMap,
     Dots,
     maskMap,
@@ -464,6 +470,7 @@ function setupPerforation() {
 function updatePerforation() {
   
   // --- Read UI ---
+  gridLayout = document.getElementById("layoutMode").value;
   size1 = num("size1");
   size2 = num("size2");
   size3 = num("size3");
