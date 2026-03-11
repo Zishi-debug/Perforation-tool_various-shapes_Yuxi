@@ -41,11 +41,11 @@ class DotLayer {
     const invRange = 1 / Math.max(1e-6, (high - low));
 
     let dx = spacing;
-    let dy 
+    let dy
 
     if (gridLayout === "equilateral") {
       dy = spacing * Math.sqrt(3) / 2;
-    } else if(gridLayout === "square" ) {
+    } else if (gridLayout === "square") {
       dy = spacing;
     }
 
@@ -56,7 +56,7 @@ class DotLayer {
 
       if (gridLayout === "equilateral") {
         rowOffset = (row % 2) * (spacing / 2);
-      } else if(gridLayout === "square" ) {
+      } else if (gridLayout === "square") {
         rowOffset = 0;
       }
 
@@ -67,15 +67,15 @@ class DotLayer {
         // Rotate grid by 45 degrees
         let newX, newY;
 
-    if (gridLayout === "square") {
-      // square keeps 45° rotation
-      newX = centerX + (baseX * cos45 - baseY * sin45);
-      newY = centerY + (baseX * sin45 + baseY * cos45);
-    } else if (gridLayout === "equilateral") {
-      // equilateral has no 45° rotation
-      newX = centerX + baseX;
-      newY = centerY + baseY;
-    }
+        if (gridLayout === "square") {
+          // square keeps 45° rotation
+          newX = centerX + (baseX * cos45 - baseY * sin45);
+          newY = centerY + (baseX * sin45 + baseY * cos45);
+        } else if (gridLayout === "equilateral") {
+          // equilateral has no 45° rotation
+          newX = centerX + baseX;
+          newY = centerY + baseY;
+        }
 
         if (newX < 0 || newX >= width || newY < 0 || newY >= height) continue;
 
