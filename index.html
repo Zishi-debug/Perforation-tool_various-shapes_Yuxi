@@ -9,9 +9,109 @@
   <meta charset="utf-8" />
   <title>VSPT Perforation Tool</title>
   <link rel="icon" type="image/png" href="web_favicon.png" />
+
+  <style>
+    .vspt-update-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .vspt-update-box {
+      background: #ffffff;
+      color: #111111;
+      max-width: 460px;
+      width: 100%;
+      padding: 24px;
+      border-radius: 14px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+      text-align: center;
+      font-family: Arial, sans-serif;
+    }
+
+    .vspt-update-box h2 {
+      margin: 0 0 12px;
+      font-size: 22px;
+    }
+
+    .vspt-update-box p {
+      margin: 0 0 16px;
+      line-height: 1.5;
+      font-size: 15px;
+    }
+
+    .vspt-update-box ul {
+      margin: 0 0 18px;
+      padding-left: 20px;
+      text-align: left;
+      line-height: 1.45;
+      font-size: 14px;
+    }
+
+    .vspt-update-box li {
+      margin-bottom: 8px;
+    }
+
+    .vspt-update-subtitle {
+      font-weight: bold;
+      margin-bottom: 8px;
+      text-align: left;
+    }
+
+    .vspt-update-link {
+      display: inline-block;
+      margin: 6px 0 18px;
+      color: #0066cc;
+      text-decoration: underline;
+      word-break: break-word;
+      font-weight: bold;
+    }
+
+    .vspt-update-close {
+      border: none;
+      background: #111111;
+      color: #ffffff;
+      padding: 10px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .vspt-update-close:hover {
+      opacity: 0.85;
+    }
+  </style>
 </head>
 
 <body>
+
+  <div id="vsptUpdateModal" class="vspt-update-modal" role="dialog" aria-modal="true" aria-labelledby="vsptUpdateTitle">
+    <div class="vspt-update-box">
+      <h2 id="vsptUpdateTitle">VSPT 2.0.0 is now live</h2>
+      <p>Dear users, VSPT 2.0.0 has moved to a new location. Please use the link below to access the latest version:</p>
+      <a class="vspt-update-link" href="https://zishi-debug.github.io/VSPT/" target="_blank" rel="noopener noreferrer">
+        https://zishi-debug.github.io/VSPT/
+      </a>
+      <p class="vspt-update-subtitle">Key updates:</p>
+      <ul>
+        <li>A brand-new UI that makes scaling your sketch smoother and easier.</li>
+        <li>Upload reference images locally and preview your design without exporting first.</li>
+        <li>Check for overlapping dots and view the total dot count directly in the tool.</li>
+      </ul>
+      <button class="vspt-update-close" type="button" onclick="window.open('https://zishi-debug.github.io/VSPT/', '_blank', 'noopener,noreferrer')">
+        Open VSPT 2.0.0
+      </button>
+      <button class="vspt-update-close" type="button" style="margin-left: 8px; background: #666666;" onclick="document.getElementById('vsptUpdateModal').style.display='none'">
+        Close
+      </button>
+    </div>
+  </div>
   <div class="main-container">
     <h1>VSPT-Various Shapes Perforation Tool</h1>
 
